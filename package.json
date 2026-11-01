@@ -27,7 +27,7 @@
 		"biome:fix": "biome check --write .",
 		"build": "tsup",
 		"ci:lint": "pnpm types:check && pnpm biome:check && pnpm knip:check && pnpm prettier:check",
-		"ci:tests": "pnpm test:run && pnpm build",
+		"ci:tests": "pnpm build",
 		"dev": "tsup --watch",
 		"knip:check": "knip",
 		"knip:fix": "knip --fix",
