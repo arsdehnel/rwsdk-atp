@@ -31,7 +31,7 @@
 		"dev": "tsup --watch",
 		"knip:check": "knip",
 		"knip:fix": "knip --fix",
-		"prepare": "husky",
+		"prepare": "husky || true && tsup",
 		"prettier:check": "prettier --check .",
 		"prettier:fix": "prettier --write .",
 		"test:run": "vitest run --coverage",
