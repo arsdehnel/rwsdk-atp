@@ -1,9 +1,8 @@
 import { getCallerInfo } from './get-caller-info';
+import { parseLevel } from './parse-level';
 import { parseTaskOverrides } from './parse-task-overrides';
 import type { Logger, LogLevel } from './types';
 import { writeLog } from './write-log';
-
-const logLevel: LogLevel = 'info';
 
 export function buildLogger(
 	bindings: Record<string, unknown>,
@@ -12,7 +11,7 @@ export function buildLogger(
 	taskOverrides?: string | undefined,
 ): Logger {
 	const overrides = parseTaskOverrides(taskOverrides);
-	const level = levelOverride || logLevel;
+	const level = parseLevel(levelOverride, 'info');
 	return {
 		debug: (message: string, meta?: Record<string, unknown>) =>
 			writeLog('debug', message, level, bindings, meta, isDev ? getCallerInfo() : undefined),
