@@ -15,8 +15,7 @@ export async function loadSessionFromRequest(
 		return null;
 	}
 	// sessionLifecycleEvent({ sessionId: unsignedSessionId, event: 'LOAD' });
-	const sessionDOId = sessionDOBinding.idFromName(unsignedSessionId);
-	const doStub = sessionDOBinding.get(sessionDOId);
+	const doStub = sessionDOBinding.getByName(unsignedSessionId);
 	try {
 		return await doStub.getSession();
 	} catch {

@@ -2,7 +2,7 @@ import type { BrowserSessionDurableObject } from './durable-object';
 import { getSessionId } from './get-session-id';
 import { setSessionCookie } from './set-session-cookie';
 
-export async function clear(
+export async function clearSession(
 	sessionDOBinding: DurableObjectNamespace<BrowserSessionDurableObject>,
 	browserSessionSigningKey: string,
 	sessionIdCookieKey: string,
@@ -13,8 +13,7 @@ export async function clear(
 	if (!unsignedSessionId) {
 		return;
 	}
-	const sessionDOId = sessionDOBinding.idFromName(unsignedSessionId);
-	const doStub = sessionDOBinding.get(sessionDOId);
+	const doStub = sessionDOBinding.getByName(unsignedSessionId);
 	// const toBeRevokedSession = await doStub.getSession();
 	await doStub.revokeSession();
 	setSessionCookie(sessionIdCookieKey, request.url, '', 0, headers);

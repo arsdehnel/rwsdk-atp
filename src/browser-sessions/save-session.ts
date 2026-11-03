@@ -18,10 +18,11 @@ export async function saveSession(
 	if (!unsignedSessionId) {
 		unsignedSessionId = crypto.randomUUID();
 	}
+
+	const doStub = sessionDOBinding.getByName(unsignedSessionId);
+
 	const signature = await createSessionSignature(browserSessionSigningKey, unsignedSessionId);
 	const signedSessionId = packSessionId(unsignedSessionId, signature);
-	const sessionDOId = sessionDOBinding.idFromName(unsignedSessionId);
-	const doStub = sessionDOBinding.get(sessionDOId);
 	const savedSession = await doStub.saveSession(unsignedSessionId, sessionData);
 	setSessionCookie(sessionIdCookieKey, requestUrl, signedSessionId, sessionDurationInSeconds, headers);
 	// sessionLifecycleEvent({ sessionId: unsignedSessionId, event: 'UPSERT', userId: sessionData.userId });
