@@ -47,6 +47,7 @@ export class BrowserSessionDurableObject extends DurableObject {
 		const now = this.now();
 		const updatedSession: Session = {
 			sessionId: unsignedSessionId,
+			did: null,
 			...sessionData,
 			lastAccessedAt: now,
 		};
