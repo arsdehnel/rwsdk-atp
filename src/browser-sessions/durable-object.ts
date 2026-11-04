@@ -1,13 +1,15 @@
 import { DurableObject } from 'cloudflare:workers';
-import type { Session } from './session';
-
-const sessionDurationInSeconds = 60 * 60 * 24 * 14; // 14 days
+import type { BrowserSessionEnv, Session } from './types';
 
 export class BrowserSessionDurableObject extends DurableObject {
 	private session: Session | undefined = undefined;
 	constructor(state: DurableObjectState, env: Cloudflare.Env) {
 		super(state, env);
 		this.session = undefined;
+	}
+
+	private get typedEnv(): BrowserSessionEnv {
+		return this.env as unknown as BrowserSessionEnv;
 	}
 
 	// seems a little silly but this makes testing much easier
@@ -30,7 +32,7 @@ export class BrowserSessionDurableObject extends DurableObject {
 			throw new Error(`Invalid session`);
 		}
 
-		if (session.lastAccessedAt + sessionDurationInSeconds * 1000 < this.now()) {
+		if (session.lastAccessedAt + this.typedEnv.SESSION_TIMEOUT_SECONDS * 1000 < this.now()) {
 			// const revokedSession = await this.revokeSession();
 			// sessionLifecycleEvent({ sessionId: revokedSession?.sessionId, event: 'EXPIRED', userId: revokedSession?.userId });
 			throw new Error(`Session expired`);

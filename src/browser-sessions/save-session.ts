@@ -1,15 +1,10 @@
 import { createSessionSignature } from './create-session-signature';
-import type { BrowserSessionDurableObject } from './durable-object';
 import { packSessionId } from './pack-session-id';
-import type { Session } from './session';
 import { setSessionCookie } from './set-session-cookie';
-
-const sessionDurationInSeconds = 60 * 60 * 24 * 14; // 14 days
+import type { BrowserSessionEnv, Session } from './types';
 
 export async function saveSession(
-	sessionDOBinding: DurableObjectNamespace<BrowserSessionDurableObject>,
-	browserSessionSigningKey: string,
-	sessionIdCookieKey: string,
+	env: BrowserSessionEnv,
 	requestUrl: string,
 	unsignedSessionId: string | null,
 	headers: Headers,
@@ -19,12 +14,12 @@ export async function saveSession(
 		unsignedSessionId = crypto.randomUUID();
 	}
 
-	const doStub = sessionDOBinding.getByName(unsignedSessionId);
+	const doStub = env.DO_BROWSER_SESSION.getByName(unsignedSessionId);
 
-	const signature = await createSessionSignature(browserSessionSigningKey, unsignedSessionId);
+	const signature = await createSessionSignature(env.BROWSER_SESSION_SIGNING_KEY, unsignedSessionId);
 	const signedSessionId = packSessionId(unsignedSessionId, signature);
 	const savedSession = await doStub.saveSession(unsignedSessionId, sessionData);
-	setSessionCookie(sessionIdCookieKey, requestUrl, signedSessionId, sessionDurationInSeconds, headers);
+	setSessionCookie(env.SESSION_ID_COOKIE_KEY, requestUrl, signedSessionId, env.SESSION_TIMEOUT_SECONDS, headers);
 	// sessionLifecycleEvent({ sessionId: unsignedSessionId, event: 'UPSERT', userId: sessionData.userId });
 	return savedSession;
 }
