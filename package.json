@@ -21,6 +21,10 @@
 			"import": "./dist/oauth.js",
 			"types": "./dist/oauth.d.ts"
 		},
+		"./tap": {
+			"import": "./dist/tap.js",
+			"types": "./dist/tap.d.ts"
+		},
 		"./vite": {
 			"import": "./dist/vite.js",
 			"types": "./dist/vite.d.ts"
@@ -47,7 +51,9 @@
 		"types:check": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@atproto/lex": "^0.4.4",
 		"@atproto/oauth-client-node": "^0.5.13",
+		"@atproto/tap": "^0.4.17",
 		"chalk": "^6.0.1",
 		"chalk-template": "^1.1.3",
 		"cookie": "^2.0.1"
@@ -68,6 +74,7 @@
 		"vitest": "^5.0.1"
 	},
 	"peerDependencies": {
+		"rwsdk": "1.7.5",
 		"vite": "8.3.5"
 	},
 	"packageManager": "pnpm@12.16.1",

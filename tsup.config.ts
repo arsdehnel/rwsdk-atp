@@ -5,6 +5,7 @@ export default defineConfig({
 		'browser-sessions': 'src/browser-sessions/index.ts',
 		logger: 'src/logger/index.ts',
 		oauth: 'src/oauth/index.ts',
+		tap: 'src/tap/index.ts',
 		vite: 'src/vite/index.ts',
 	},
 	format: ['esm'],
