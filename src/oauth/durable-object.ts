@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import type { NodeSavedSession } from '@atproto/oauth-client-node';
 import { decrypt, encrypt, parseKeyRing } from '../crypto';
+import { createDoLogger, type Logger } from '../logger';
 import type { OAuthTokenEnv } from './types';
 
 export class OAuthTokenDurableObject extends DurableObject {
@@ -8,6 +9,20 @@ export class OAuthTokenDurableObject extends DurableObject {
 	private locked = false;
 	private lockQueue: Array<() => void> = [];
 	private lockAcquiredAtTimestamp: number | undefined = undefined;
+	private logger: Logger = createDoLogger(
+		{
+			doClassName: 'OAuthTokenDurableObject',
+		},
+		true,
+	);
+
+	constructor(ctx: DurableObjectState, env: Cloudflare.Env) {
+		super(ctx, env);
+		this.logger = this.logger.child({
+			doId: this.ctx.id.toString(),
+			doName: this.ctx.id.name || 'n/a',
+		});
+	}
 
 	private get typedEnv(): OAuthTokenEnv {
 		return this.env as unknown as OAuthTokenEnv;
@@ -43,6 +58,8 @@ export class OAuthTokenDurableObject extends DurableObject {
 				const encrypted = await encrypt(JSON.stringify(this.tokenData), keys[0]);
 				await this.ctx.storage.put<string>('tokenData', encrypted);
 			}
+		} else {
+			this.logger.info(`Token pulled from live state`);
 		}
 		return this.tokenData;
 	}
@@ -52,11 +69,13 @@ export class OAuthTokenDurableObject extends DurableObject {
 		const keys = parseKeyRing(this.typedEnv.OAUTH_TOKEN_KV_ENCRYPTION_KEYS);
 		const encrypted = await encrypt(JSON.stringify(tokenData), keys[0]);
 		await this.ctx.storage.put<string>('tokenData', encrypted);
+		this.logger.info(`Set token`);
 	}
 
 	async deleteToken(): Promise<void> {
 		this.tokenData = undefined;
 		await this.ctx.storage.delete('tokenData');
+		this.logger.info(`Delete token`);
 	}
 
 	async acquireLock(): Promise<void> {
@@ -71,16 +90,23 @@ export class OAuthTokenDurableObject extends DurableObject {
 		}
 		this.locked = true;
 		this.lockAcquiredAtTimestamp = Date.now();
+		this.logger.info(`Lock aquired`);
 	}
 
 	async releaseLock(): Promise<void> {
-		const next = this.lockQueue.shift();
-		if (next) {
-			this.lockAcquiredAtTimestamp = Date.now();
-			next(); // transfer ownership, don't flip locked to false
-		} else {
+		try {
+			const next = this.lockQueue.shift();
+			if (next) {
+				this.lockAcquiredAtTimestamp = Date.now();
+				next(); // transfer ownership, don't flip locked to false
+			} else {
+				this.locked = false;
+				this.lockAcquiredAtTimestamp = undefined;
+			}
+		} catch (err) {
 			this.locked = false;
 			this.lockAcquiredAtTimestamp = undefined;
+			this.logger.error(`Error releasing lock: ${err}`);
 		}
 	}
 }
