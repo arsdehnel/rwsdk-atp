@@ -1,3 +1,3 @@
 export * from './client';
 export * from './durable-object';
-export type { OAuthSession } from './types';
+export type { NodeOAuthClient, OAuthSession } from './types';
