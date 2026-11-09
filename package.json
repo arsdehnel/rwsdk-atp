@@ -13,6 +13,10 @@
 			"import": "./dist/browser-sessions.js",
 			"types": "./dist/browser-sessions.d.ts"
 		},
+		"./errors": {
+			"import": "./dist/errors.js",
+			"types": "./dist/errors.d.ts"
+		},
 		"./logger": {
 			"import": "./dist/logger.js",
 			"types": "./dist/logger.d.ts"
@@ -24,6 +28,10 @@
 		"./tap": {
 			"import": "./dist/tap.js",
 			"types": "./dist/tap.d.ts"
+		},
+		"./utils": {
+			"import": "./dist/utils.js",
+			"types": "./dist/utils.d.ts"
 		},
 		"./vite": {
 			"import": "./dist/vite.js",

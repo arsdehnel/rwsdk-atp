@@ -3,9 +3,11 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
 	entry: {
 		'browser-sessions': 'src/browser-sessions/index.ts',
+		errors: 'src/errors/index.ts',
 		logger: 'src/logger/index.ts',
 		oauth: 'src/oauth/index.ts',
 		tap: 'src/tap/index.ts',
+		utils: 'src/utils/index.ts',
 		vite: 'src/vite/index.ts',
 	},
 	format: ['esm'],
