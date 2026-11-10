@@ -6,7 +6,8 @@ export function rwsdkAtp(): Plugin[] {
 			name: 'rwsdk-atp-patch-redirect',
 			transform(code: string, id: string): string | null {
 				if (id.includes('@atproto') || id.includes('atproto-labs')) {
-					return code.replace(/redirect:\s*['"]error['"]/g, "redirect: 'manual'");
+					const patched = code.replace(/redirect:\s*['"]error['"]/g, "redirect: 'manual'");
+					return patched !== code ? patched : null;
 				}
 				return null;
 			},

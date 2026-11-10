@@ -49,6 +49,7 @@
 						"useExplicitType": "off"
 					},
 					"suspicious": {
+						"noConsole": "off",
 						"noExplicitAny": "off"
 					}
 				}

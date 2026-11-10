@@ -1,4 +1,4 @@
-export function flattenError(err: unknown): Record<string, Error | string> {
+export function flattenError(err: unknown): { error: Error; message: string } {
 	const cause = err instanceof Error ? err.cause : undefined;
 	const errorCause = cause instanceof Error ? `: ${cause.message}` : '';
 	return {

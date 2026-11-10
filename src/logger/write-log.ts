@@ -2,7 +2,7 @@ import { Chalk } from 'chalk';
 import { makeTaggedTemplate } from 'chalk-template';
 import { CENSOR, LEVEL_ORDER, REDACTED_PATTERN } from './constants';
 import { redact } from './redact';
-import { serializeError } from './seriialize-error';
+import { serializeError } from './serialize-error';
 import type { LogLevel } from './types';
 
 // chalk cannot detect color support inside the Worker runtime (no process.stdout),
