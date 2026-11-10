@@ -4,3 +4,10 @@ dist/
 
 # Coverage directory used by tools like istanbul
 coverage
+
+# VitePress build output and cache
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# TypeDoc generated API reference (regenerated at build time)
+docs/api/

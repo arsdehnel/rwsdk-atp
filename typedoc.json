@@ -1,0 +1,20 @@
+{
+	"$schema": "https://typedoc.org/schema.json",
+	"plugin": ["typedoc-plugin-markdown"],
+	"entryPoints": [
+		"src/browser-sessions/index.ts",
+		"src/errors/index.ts",
+		"src/logger/index.ts",
+		"src/oauth/index.ts",
+		"src/tap/index.ts",
+		"src/utils/index.ts",
+		"src/vite/index.ts"
+	],
+	"entryPointStrategy": "expand",
+	"out": "docs/api",
+	"entryFileName": "index",
+	"outputFileStrategy": "modules",
+	"tsconfig": "./tsconfig.json",
+	"readme": "./docs/templates/api/index.md",
+	"githubPages": false
+}

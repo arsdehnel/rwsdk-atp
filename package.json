@@ -49,6 +49,8 @@
 		"ci:lint": "pnpm types:check && pnpm biome:check && pnpm knip:check && pnpm prettier:check",
 		"ci:tests": "pnpm test:run && pnpm build",
 		"dev": "tsup --watch",
+		"docs:build": "typedoc && vitepress build docs",
+		"docs:dev": "typedoc && vitepress dev docs",
 		"knip:check": "knip",
 		"knip:fix": "knip --fix",
 		"prepare": "husky || true && tsup",
@@ -79,7 +81,10 @@
 		"prettier": "^3.8.1",
 		"prettier-plugin-packagejson": "^3.0.2",
 		"tsup": "^8.3.0",
+		"typedoc": "^0.28.0",
+		"typedoc-plugin-markdown": "^4.0.0",
 		"typescript": "^5.5.0",
+		"vitepress": "^1.0.0",
 		"vitest": "^5.1.0"
 	},
 	"peerDependencies": {
