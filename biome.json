@@ -37,7 +37,9 @@
 			"!**/dist",
 			"!**/.wrangler",
 			"!**/test-results",
-			"!**/.pnpm-store"
+			"!**/.pnpm-store",
+			"!docs/.vitepress/cache",
+			"!docs/.vitepress/dist"
 		]
 	},
 	"overrides": [

@@ -23,7 +23,7 @@ describe('isValidSessionId', () => {
 
 	it('returns false for a tampered session ID', async () => {
 		const sessionId = await makeValidSessionId('session-abc');
-		const tampered = sessionId.slice(0, -4) + 'xxxx';
+		const tampered = `${sessionId.slice(0, -4)}xxxx`;
 		expect(await isValidSessionId(SIGNING_KEY, tampered)).toBe(false);
 	});
 
