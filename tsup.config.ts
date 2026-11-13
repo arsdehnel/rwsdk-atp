@@ -5,6 +5,7 @@ export default defineConfig({
 		'browser-sessions': 'src/browser-sessions/index.ts',
 		errors: 'src/errors/index.ts',
 		logger: 'src/logger/index.ts',
+		middleware: 'src/middleware/index.ts',
 		oauth: 'src/oauth/index.ts',
 		tap: 'src/tap/index.ts',
 		utils: 'src/utils/index.ts',

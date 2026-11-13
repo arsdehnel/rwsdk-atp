@@ -21,6 +21,10 @@
 			"import": "./dist/logger.js",
 			"types": "./dist/logger.d.ts"
 		},
+		"./middleware": {
+			"import": "./dist/middleware.js",
+			"types": "./dist/middleware.d.ts"
+		},
 		"./oauth": {
 			"import": "./dist/oauth.js",
 			"types": "./dist/oauth.d.ts"

@@ -5,6 +5,7 @@
 		"src/browser-sessions/index.ts",
 		"src/errors/index.ts",
 		"src/logger/index.ts",
+		"src/middleware/index.ts",
 		"src/oauth/index.ts",
 		"src/tap/index.ts",
 		"src/utils/index.ts",

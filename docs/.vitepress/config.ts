@@ -16,7 +16,10 @@ export default defineConfig({
 					text: 'Guides',
 					items: [
 						{ text: 'Getting Started', link: '/guides/getting-started/' },
+						{ text: 'Logging', link: '/guides/logging' },
+						{ text: 'Middleware', link: '/guides/middleware' },
 						{ text: 'Multiple Queues', link: '/guides/multiple-queues' },
+						{ text: 'Tap Integration', link: '/guides/tap-integration' },
 					],
 				},
 			],
@@ -28,6 +31,7 @@ export default defineConfig({
 						{ text: 'browser-sessions', link: '/api/browser-sessions' },
 						{ text: 'errors', link: '/api/errors' },
 						{ text: 'logger', link: '/api/logger' },
+						{ text: 'middleware', link: '/api/middleware' },
 						{ text: 'oauth', link: '/api/oauth' },
 						{ text: 'tap', link: '/api/tap' },
 						{ text: 'utils', link: '/api/utils' },

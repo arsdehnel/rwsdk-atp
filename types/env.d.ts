@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import type { DurableObject, DurableObjectNamespace } from 'cloudflare:workers';
 
 export interface SessionEnv {

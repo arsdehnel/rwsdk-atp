@@ -8,6 +8,6 @@
 | [errors](/api/errors)                     | Shared error types                                |
 | [logger](/api/logger)                     | Structured logging utilities                      |
 | [oauth](/api/oauth)                       | AT Protocol OAuth client and token storage        |
-| [tap](/api/tap)                           | TAP webhook handler and event registration        |
+| [tap](/api/tap)                           | Tap webhook handler and event registration        |
 | [utils](/api/utils)                       | General utilities                                 |
 | [vite](/api/vite)                         | Vite plugin for development                       |

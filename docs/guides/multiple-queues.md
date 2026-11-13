@@ -1,6 +1,6 @@
 # Multiple Queues
 
-By default the getting started guide wires up the TAP queue handler directly as the worker's `queue` export:
+By default the getting started guide wires up the Tap queue handler directly as the worker's `queue` export:
 
 ```ts
 export default {
@@ -9,7 +9,7 @@ export default {
 };
 ```
 
-This works when the TAP webhook queue is the only queue in your worker. If you add additional queues, the Cloudflare runtime routes all queue message batches through the single `queue` export regardless of which queue they came from. You need to dispatch to the right handler based on `batch.queue`, which contains the name of the queue that produced the batch.
+This works when the Tap webhook queue is the only queue in your worker. If you add additional queues, the Cloudflare runtime routes all queue message batches through the single `queue` export regardless of which queue they came from. You need to dispatch to the right handler based on `batch.queue`, which contains the name of the queue that produced the batch.
 
 ## Dispatching by queue name
 

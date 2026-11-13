@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide walks through integrating `rwsdk-atp` into a RedwoodSDK Cloudflare Workers app to add AT Protocol OAuth authentication, session management, and TAP webhook handling.
+This guide walks through integrating `rwsdk-atp` into a RedwoodSDK Cloudflare Workers app to add AT Protocol OAuth authentication and session management.
 
 ## Installation
 
@@ -93,7 +93,7 @@ export { OAuthTokenDurableObject } from 'rwsdk-atp/oauth';
 
 ## Logger middleware
 
-`ctx.logger` is used throughout `rwsdk-atp` — in session loading, OAuth handlers, and TAP webhook processing. Wire it up early in your middleware chain so it's available everywhere.
+`ctx.logger` is used throughout `rwsdk-atp` — in session loading, OAuth handlers, and Tap webhook processing. Wire it up early in your middleware chain so it's available everywhere.
 
 `createRequestLogger` builds a structured logger tied to the current request. It uses the Cloudflare `cf-ray` header as a correlation ID when available, falling back to a random UUID, so logs across a request can be traced together. The second argument enables more verbose dev-friendly output.
 
@@ -103,7 +103,7 @@ import type { DefaultAppContext, RequestInfo } from 'rwsdk/worker';
 import { createRequestLogger } from 'rwsdk-atp/logger';
 
 export default function loggerMiddleware({ ctx, request }: RequestInfo<DefaultAppContext>): void {
-	ctx.logger = createRequestLogger(request, true);
+	ctx.logger = createRequestLogger(request, import.meta.env.DEV);
 }
 ```
 
@@ -121,6 +121,8 @@ const app = defineApp([
 export default { fetch: app.fetch };
 ```
 
+For logger configuration options, child loggers, log level filtering, and guidelines on when to use each level, see the [Logging](./logging) guide.
+
 ## Session middleware
 
 The session middleware runs on every request and loads the current browser session from the signed cookie, making it available as `ctx.session` in all downstream handlers and pages. Without this, every handler would need to call `loadSessionFromRequest` manually.
@@ -135,6 +137,8 @@ export default async function sessionMiddleware({ ctx, request, response }: Requ
 	ctx.session = await loadSessionFromRequest(env, request, response.headers);
 }
 ```
+
+This is also a good point to add security-focused middleware to your chain. `rwsdk-atp/middleware` provides drop-in handlers for bot protection, security headers, and CORS — see the [Middleware](./middleware) guide.
 
 ## OAuth routes
 
@@ -244,10 +248,10 @@ Once session middleware is running, `ctx.session` is available in any page or ro
 import type { RequestInfo } from 'rwsdk/worker';
 
 export default function Home({ ctx }: RequestInfo) {
-    if (ctx.session?.did) {
-        return <p>Logged in as {ctx.session.did}</p>;
-    }
-    return <p>Not logged in</p>;
+	if (ctx.session?.did) {
+		return <p>Logged in as {ctx.session.did}</p>;
+	}
+	return <p>Not logged in</p>;
 }
 ```
 
@@ -269,105 +273,8 @@ const lexClient = new Client(oauthSession);
 
 `restore()` will throw if the OAuth session has expired or been revoked. Handle that case by revoking the local session and directing the user back to the login flow.
 
-## TAP webhook integration
+## Next steps
 
-TAP delivers real-time AT Protocol record events (creates, updates, deletes) to your app as webhooks. `rwsdk-atp` provides a handler and registration system that routes these events to your code — either synchronously in the webhook handler itself, or asynchronously via a Cloudflare Queue.
-
-### Wrangler queue configuration
-
-Events received from TAP are published to a Cloudflare Queue for asynchronous processing. Add the queue binding to your `wrangler.jsonc`:
-
-```jsonc
-{
-	"queues": {
-		"consumers": [
-			{
-				"queue": "<your-queue-name>",
-				"max_batch_size": 10,
-				"max_batch_timeout": 5
-			}
-		],
-		"producers": [
-			{
-				"binding": "QUEUE_TAP_WEBHOOK",
-				"queue": "<your-queue-name>"
-			}
-		]
-	}
-}
-```
-
-**Further reading:**
-- [Cloudflare Queues](https://developers.cloudflare.com/queues/)
-
-### Webhook endpoint
-
-Add a route handler that delegates to `tapWebhookHandler`. The handler parses the incoming event, validates it, and routes it to the matching registered consumer or workflow invoker.
-
-```ts
-// src/api/webhooks/tap.ts
-import { env } from 'cloudflare:workers';
-import type { RequestInfo } from 'rwsdk/worker';
-import { tapWebhookHandler } from 'rwsdk-atp/tap';
-import tapRegistrations from '@/tap/registrations';
-
-async function post({ ctx, request }: RequestInfo): Promise<Response> {
-	return await tapWebhookHandler(request, tapRegistrations, env.QUEUE_TAP_WEBHOOK, ctx.logger);
-}
-
-export default { post };
-```
-
-Register it in your API routes:
-
-```ts
-route('/webhooks/tap', tap),
-```
-
-### TAP registrations
-
-Create a `TapRegistrations` instance and register consumers for the collections you care about. The registration specifies which collection and which actions (create, update, delete) to match.
-
-A **queue consumer** (`TapRegistrationQueueConsumer`) receives events via the Cloudflare Queue and processes them asynchronously. A **workflow invoker** (`TapRegistrationWorkflowInvoker`) is called directly in the webhook request handler and must respond quickly.
-
-```ts
-// src/tap/registrations.ts
-import { TapRegistrations } from 'rwsdk-atp/tap';
-import myConsumer from './my-consumer';
-
-const tapRegistrations = new TapRegistrations();
-tapRegistrations.registerQueueConsumer(myConsumer.forRegistration());
-
-export default tapRegistrations;
-```
-
-```ts
-// src/tap/my-consumer.ts
-import { type RecordEvent, TapRegistrationQueueConsumer } from 'rwsdk-atp/tap';
-import type { Logger } from 'rwsdk-atp/logger';
-
-async function queueConsumer(msg: RecordEvent, ctx: { logger: Logger }): Promise<void> {
-	ctx.logger.info(`Processing event: ${msg.collection} ${msg.action} by ${msg.did}`);
-	// handle the event...
-}
-
-export default new TapRegistrationQueueConsumer({
-	collection: 'xyz.statusphere.status',
-	actions: ['create', 'update'],
-	queueConsumer,
-});
-```
-
-### Worker queue export
-
-For the queue consumer to receive messages, the worker's default export must include a `queue` handler alongside `fetch`. This is what the Cloudflare runtime calls when it delivers a batch of queue messages to your worker.
-
-```ts
-// src/worker.tsx
-const app = defineApp([...]);
-
-export default {
-    fetch: app.fetch,
-    queue: tapRegistrations.workerQueueHelper,
-};
-```
+- [Tap Integration](./tap-integration) — receive real-time AT Protocol record events via webhooks and Cloudflare Queues
+- [Middleware](./middleware) — bot protection, security headers, and CORS
+- [Logging](./logging) — structured loggers for Durable Objects, Queues, and Workflows, and log level guidelines
