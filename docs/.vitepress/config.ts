@@ -19,6 +19,7 @@ export default defineConfig({
 						{ text: 'Error Classes', link: '/guides/errors' },
 						{ text: 'Logging', link: '/guides/logging' },
 						{ text: 'Middleware', link: '/guides/middleware' },
+						{ text: 'Response Helpers', link: '/guides/response' },
 						{ text: 'Multiple Queues', link: '/guides/multiple-queues' },
 						{ text: 'Tap Integration', link: '/guides/tap-integration' },
 					],

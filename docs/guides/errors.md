@@ -128,7 +128,9 @@ throw new StepError(
 
 ## Catching errors
 
-Because all three classes carry a `code`, a single catch block can determine the right HTTP status without inspecting the message:
+`rwsdk-atp/response` provides `apiErrorResponse` and `actionErrorResponse` that handle this translation automatically — see the [Response Helpers](./response) guide for details.
+
+If you need to catch errors manually, all three classes carry a `code` so a single catch block can determine the right HTTP status without inspecting the message:
 
 ```ts
 import { AccessError, RepositoryError } from 'rwsdk-atp/errors';

@@ -29,6 +29,10 @@
 			"import": "./dist/oauth.js",
 			"types": "./dist/oauth.d.ts"
 		},
+		"./response": {
+			"import": "./dist/response.js",
+			"types": "./dist/response.d.ts"
+		},
 		"./tap": {
 			"import": "./dist/tap.js",
 			"types": "./dist/tap.d.ts"

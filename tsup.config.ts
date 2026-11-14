@@ -7,6 +7,7 @@ export default defineConfig({
 		logger: 'src/logger/index.ts',
 		middleware: 'src/middleware/index.ts',
 		oauth: 'src/oauth/index.ts',
+		response: 'src/response/index.ts',
 		tap: 'src/tap/index.ts',
 		utils: 'src/utils/index.ts',
 		vite: 'src/vite/index.ts',

@@ -35,20 +35,20 @@ export default defineConfig({
 `rwsdk-atp` requires three Cloudflare primitives: two Durable Objects and one KV namespace.
 
 **Durable Objects** store per-user data that needs to be consistent and durable:
-- `BrowserSessionDurableObject` — stores browser session data, keyed by session ID
-- `OAuthTokenDurableObject` — stores OAuth tokens, keyed by user DID
+- `BrowserSessionDurableObject`: stores browser session data, keyed by session ID
+- `OAuthTokenDurableObject`: stores OAuth tokens, keyed by user DID
 
 **KV namespace** (`KV_OAUTH_STATE`) holds short-lived OAuth state during the authorization flow — the PKCE verifier and other parameters that need to survive a redirect round-trip to the PDS.
 
 **Secrets** are encryption keys used to protect stored data at rest:
-- `BROWSER_SESSION_SIGNING_KEY` — used to HMAC-sign session cookies so they can't be forged
-- `OAUTH_STATE_KV_ENCRYPTION_KEYS` — encrypts OAuth state stored in KV
-- `OAUTH_TOKEN_KV_ENCRYPTION_KEYS` — encrypts OAuth tokens stored in the Durable Object
+- `BROWSER_SESSION_SIGNING_KEY`: used to HMAC-sign session cookies so they can't be forged
+- `OAUTH_STATE_KV_ENCRYPTION_KEYS`: encrypts OAuth state stored in KV
+- `OAUTH_TOKEN_KV_ENCRYPTION_KEYS`: encrypts OAuth tokens stored in the Durable Object
 
 **Vars** configure runtime behavior:
-- `ATPROTO_OAUTH_SCOPE` — space-separated OAuth scopes your app requests. `atproto` is the minimum; add lexicon-specific scopes (e.g. `repo:xyz.statusphere.status`) for collections you need write access to.
-- `SESSION_ID_COOKIE_KEY` — the cookie name used for the session ID
-- `SESSION_TIMEOUT_SECONDS` — how long a session stays valid (1209600 = 14 days)
+- `ATPROTO_OAUTH_SCOPE`: space-separated OAuth scopes your app requests. `atproto` is the minimum; add lexicon-specific scopes (e.g. `repo:xyz.statusphere.status`) for collections you need write access to.
+- `SESSION_ID_COOKIE_KEY`: the cookie name used for the session ID
+- `SESSION_TIMEOUT_SECONDS`: how long a session stays valid (1209600 = 14 days)
 
 ```jsonc
 {
@@ -144,7 +144,7 @@ This is also a good point to add security-focused middleware to your chain. `rws
 
 Three route handlers implement the full AT Protocol OAuth PKCE flow: initiation, callback, and logout. The login route kicks off the flow by getting an authorization URL from the user's PDS; the callback route completes it by exchanging the authorization code for a token and creating a session; logout revokes the token and clears the session.
 
-**Login** — accepts a handle, resolves the user's PDS, and returns an authorization URL to redirect to:
+**Login**: accepts a handle, resolves the user's PDS, and returns an authorization URL to redirect to:
 
 ```ts
 // src/api/oauth/login.ts
@@ -172,7 +172,7 @@ async function post({ ctx, request }: RequestInfo): Promise<Response> {
 export default { post };
 ```
 
-**Callback** — receives the authorization code from the PDS, exchanges it for a token, and saves the session:
+**Callback**: receives the authorization code from the PDS, exchanges it for a token, and saves the session:
 
 ```ts
 // src/api/oauth/callback.ts
@@ -200,7 +200,7 @@ async function get({ ctx, request, response }: RequestInfo): Promise<Response> {
 export default { get };
 ```
 
-**Logout** — revokes the OAuth token at the PDS and clears the local session cookie:
+**Logout**: revokes the OAuth token at the PDS and clears the local session cookie:
 
 ```ts
 // src/api/oauth/logout.ts
@@ -275,6 +275,6 @@ const lexClient = new Client(oauthSession);
 
 ## Next steps
 
-- [Tap Integration](./tap-integration) — receive real-time AT Protocol record events via webhooks and Cloudflare Queues
-- [Middleware](./middleware) — bot protection, security headers, and CORS
-- [Logging](./logging) — structured loggers for Durable Objects, Queues, and Workflows, and log level guidelines
+- [Tap Integration](./tap-integration): receive real-time AT Protocol record events via webhooks and Cloudflare Queues
+- [Middleware](./middleware): bot protection, security headers, and CORS
+- [Logging](./logging): structured loggers for Durable Objects, Queues, and Workflows, and log level guidelines
