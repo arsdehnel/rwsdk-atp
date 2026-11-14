@@ -1,36 +1,45 @@
-export const RepositoryErrorTypes = {
-	UnexpectedRecordCount: 'unexpected-record-count',
-	InvalidUUID: 'invalid-uuid',
-	InvalidDID: 'invalid-did',
-} as const;
+export abstract class RepositoryError extends Error {
+	public abstract readonly code: number;
 
-export class RepositoryError extends Error {
-	constructor(
-		public type: (typeof RepositoryErrorTypes)[keyof typeof RepositoryErrorTypes],
-		public details: unknown[],
-	) {
-		let message = '';
-		switch (type) {
-			case RepositoryErrorTypes.UnexpectedRecordCount: {
-				const [actual, expected, entity] = details as [number, number, string];
-				message = `Expected ${expected} ${entity} record(s), but found ${actual}`;
-				break;
-			}
-			case RepositoryErrorTypes.InvalidUUID: {
-				const [value, entity] = details as [string, string];
-				message = `The value "${value}" is not a valid ID for a ${entity}`;
-				break;
-			}
-			case RepositoryErrorTypes.InvalidDID: {
-				const [value, entity] = details as [string, string];
-				message = `The value "${value}" is not a valid DID for a ${entity}`;
-				break;
-			}
-			default:
-				message = 'An unknown repository error occurred';
-		}
+	constructor(message: string) {
 		super(message);
 		this.name = 'RepositoryError';
-		this.type = type;
+	}
+}
+
+export class NoRecordFoundError extends RepositoryError {
+	public readonly code: number;
+
+	constructor(entity: string, code = 404) {
+		super(`${entity} not found`);
+		this.name = 'NoRecordFoundError';
+		this.code = code;
+	}
+}
+
+export class TooManyRecordsFoundError extends RepositoryError {
+	public readonly code = 500;
+
+	constructor(entity: string, actual: number, expected: number) {
+		super(`${entity} expected ${expected}, got ${actual}`);
+		this.name = 'TooManyRecordsFoundError';
+	}
+}
+
+export class InvalidUUIDError extends RepositoryError {
+	public readonly code = 400;
+
+	constructor(value: string, entity: string) {
+		super(`The value "${value}" is not a valid ID for a ${entity}`);
+		this.name = 'InvalidUUIDError';
+	}
+}
+
+export class InvalidDIDError extends RepositoryError {
+	public readonly code = 400;
+
+	constructor(value: string, entity: string) {
+		super(`The value "${value}" is not a valid DID for a ${entity}`);
+		this.name = 'InvalidDIDError';
 	}
 }

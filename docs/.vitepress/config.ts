@@ -16,6 +16,7 @@ export default defineConfig({
 					text: 'Guides',
 					items: [
 						{ text: 'Getting Started', link: '/guides/getting-started/' },
+						{ text: 'Error Classes', link: '/guides/errors' },
 						{ text: 'Logging', link: '/guides/logging' },
 						{ text: 'Middleware', link: '/guides/middleware' },
 						{ text: 'Multiple Queues', link: '/guides/multiple-queues' },
