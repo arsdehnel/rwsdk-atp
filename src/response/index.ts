@@ -45,7 +45,7 @@ export function toFormErrors<T>(state: ActionState<T>): { form?: string; fields:
 	if (state.success) return undefined;
 	const { _form, ...fieldErrors } = state.errors;
 	return {
-		...((_form?.length ?? 0) > 0 ? { form: _form!.join(', ') } : {}),
+		...((_form?.length ?? 0) > 0 ? { form: _form.join(', ') } : {}),
 		fields: Object.fromEntries(Object.entries(fieldErrors).map(([key, msgs]) => [key, msgs.join(', ')])),
 	};
 }
