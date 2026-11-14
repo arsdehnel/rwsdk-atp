@@ -2,7 +2,6 @@ export const RepositoryErrorTypes = {
 	UnexpectedRecordCount: 'unexpected-record-count',
 	InvalidUUID: 'invalid-uuid',
 	InvalidDID: 'invalid-did',
-	SingleInstanceError: 'single-instance-error',
 } as const;
 
 export class RepositoryError extends Error {
@@ -25,11 +24,6 @@ export class RepositoryError extends Error {
 			case RepositoryErrorTypes.InvalidDID: {
 				const [value, entity] = details as [string, string];
 				message = `The value "${value}" is not a valid DID for a ${entity}`;
-				break;
-			}
-			case RepositoryErrorTypes.SingleInstanceError: {
-				const [singleInstanceMessage] = details as [string];
-				message = singleInstanceMessage;
 				break;
 			}
 			default:

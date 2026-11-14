@@ -42,13 +42,6 @@ describe('RepositoryError', () => {
 		});
 	});
 
-	describe('SingleInstanceError', () => {
-		it('uses the provided message directly', () => {
-			const err = new RepositoryError(RepositoryErrorTypes.SingleInstanceError, ['Only one active game allowed']);
-			expect(err.message).toBe('Only one active game allowed');
-		});
-	});
-
 	describe('unknown type (default branch)', () => {
 		it('falls back to the generic message', () => {
 			const err = new RepositoryError('not-a-real-type' as any, []);
