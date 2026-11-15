@@ -136,18 +136,18 @@ If you need to catch errors manually, all three classes carry a `code` so a sing
 import { AccessError, RepositoryError } from 'rwsdk-atp/errors';
 
 try {
-    const stance = await getStanceById(id, logger);
-    return Response.json({ success: true, data: stance });
+	const stance = await getStanceById(id, logger);
+	return Response.json({ data: stance });
 } catch (err) {
-    if (err instanceof AccessError) {
-        return Response.json({ success: false, error: err.message }, { status: err.code });
-    }
-    if (err instanceof RepositoryError && err.code < 500) {
-        return Response.json({ success: false, error: err.message }, { status: err.code });
-    }
-    // unexpected error — log it, return a safe message
-    logger.error('Unexpected error fetching stance', { err });
-    return Response.json({ success: false, error: 'Failed to fetch stance' }, { status: 500 });
+	if (err instanceof AccessError) {
+		return Response.json({ errors: [err.message] }, { status: err.code });
+	}
+	if (err instanceof RepositoryError && err.code < 500) {
+		return Response.json({ errors: [err.message] }, { status: err.code });
+	}
+	// unexpected error — log it, return a safe message
+	logger.error('Unexpected error fetching stance', { err });
+	return Response.json({ errors: ['Failed to fetch stance'] }, { status: 500 });
 }
 ```
 

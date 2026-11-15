@@ -11,10 +11,10 @@ import {
 } from '../index';
 
 describe('apiSuccessResponse', () => {
-	it('returns 200 with success shape by default', async () => {
+	it('returns 200 with data shape by default', async () => {
 		const res = apiSuccessResponse({ id: 1 });
 		expect(res.status).toBe(200);
-		expect(await res.json()).toEqual({ success: true, data: { id: 1 } });
+		expect(await res.json()).toEqual({ data: { id: 1 } });
 	});
 
 	it('respects a custom status', async () => {
@@ -24,33 +24,77 @@ describe('apiSuccessResponse', () => {
 });
 
 describe('apiErrorResponse', () => {
+	describe('ZodError-like errors', () => {
+		function makeZodError(issues: Array<{ path: Array<string | number>; message: string }>): Error {
+			const err = Object.assign(new Error('Validation error'), { issues });
+			return err;
+		}
+
+		it('returns 400 with structured errors for field-level issues', async () => {
+			const err = makeZodError([
+				{ path: ['color'], message: 'Color must be a valid 6-digit hex color code' },
+				{ path: ['slug'], message: 'Slug is required' },
+			]);
+			const res = apiErrorResponse(err, 'fallback', false);
+			expect(res.status).toBe(400);
+			expect(await res.json()).toEqual({
+				errors: {
+					color: ['Color must be a valid 6-digit hex color code'],
+					slug: ['Slug is required'],
+				},
+			});
+		});
+
+		it('maps root-level issues to _form', async () => {
+			const err = makeZodError([{ path: [], message: 'At least one field is required' }]);
+			const res = apiErrorResponse(err, 'fallback', false);
+			expect(res.status).toBe(400);
+			expect(await res.json()).toMatchObject({
+				errors: { _form: ['At least one field is required'] },
+			});
+		});
+
+		it('joins nested path segments with dots', async () => {
+			const err = makeZodError([{ path: ['address', 'street'], message: 'Street is required' }]);
+			const res = apiErrorResponse(err, 'fallback', false);
+			const body = (await res.json()) as { errors: Record<string, string[]> };
+			expect(body.errors['address.street']).toEqual(['Street is required']);
+		});
+
+		it('returns 400 regardless of verboseErrors flag', async () => {
+			const err = makeZodError([{ path: ['label'], message: 'Label is required' }]);
+			const res = apiErrorResponse(err, 'fallback', true);
+			expect(res.status).toBe(400);
+		});
+	});
+
 	describe('typed errors', () => {
 		it('uses AccessError code and message directly', async () => {
 			const err = new AccessError(403, 'Forbidden');
 			const res = apiErrorResponse(err, 'fallback', false);
 			expect(res.status).toBe(403);
-			expect(await res.json()).toEqual({ success: false, error: 'Forbidden' });
+			expect(await res.json()).toEqual({ errors: ['Forbidden'] });
 		});
 
 		it('uses RepositoryError code and message when code < 500', async () => {
 			const err = new NoRecordFoundError('User');
 			const res = apiErrorResponse(err, 'fallback', false);
 			expect(res.status).toBe(404);
-			expect(await res.json()).toEqual({ success: false, error: 'User not found' });
+			expect(await res.json()).toEqual({ errors: ['User not found'] });
 		});
 
 		it('uses RepositoryError code and message for 400-range errors', async () => {
 			const err = new InvalidUUIDError('abc', 'Post');
 			const res = apiErrorResponse(err, 'fallback', false);
 			expect(res.status).toBe(400);
-			expect(await res.json()).toMatchObject({ success: false, error: expect.stringContaining('abc') });
+			expect(await res.json()).toMatchObject({ errors: [expect.stringContaining('abc')] });
 		});
 
 		it('falls through to 500 for RepositoryError with code >= 500', async () => {
 			const err = new TooManyRecordsFoundError('User', 2, 1);
 			const res = apiErrorResponse(err, 'fallback message', false);
 			expect(res.status).toBe(500);
-			expect(await res.json()).toEqual({ success: false, error: 'fallback message' });
+			expect(await res.json()).toEqual({ errors: ['fallback message'] });
 		});
 	});
 
@@ -58,7 +102,7 @@ describe('apiErrorResponse', () => {
 		it('returns 500 with fallback message', async () => {
 			const res = apiErrorResponse(new Error('internal detail'), 'Something went wrong', false);
 			expect(res.status).toBe(500);
-			expect(await res.json()).toEqual({ success: false, error: 'Something went wrong' });
+			expect(await res.json()).toEqual({ errors: ['Something went wrong'] });
 		});
 	});
 
@@ -66,33 +110,28 @@ describe('apiErrorResponse', () => {
 		it('returns the error message', async () => {
 			const res = apiErrorResponse(new Error('internal detail'), 'fallback', true);
 			expect(res.status).toBe(500);
-			expect(await res.json()).toMatchObject({ success: false, error: 'internal detail' });
+			expect(await res.json()).toMatchObject({ errors: ['internal detail'] });
 		});
 
-		it('includes serialized cause when present', async () => {
+		it('walks the full cause chain into errors', async () => {
 			const cause = new Error('root cause');
 			const err = new Error('outer error', { cause });
-			const body = (await apiErrorResponse(err, 'fallback', true).json()) as Record<string, unknown>;
-			expect(body.cause).toEqual({ name: 'Error', message: 'root cause' });
+			const res = apiErrorResponse(err, 'fallback', true);
+			expect(await res.json()).toEqual({ errors: ['outer error', 'root cause'] });
 		});
 
-		it('serializes nested causes recursively', async () => {
+		it('walks nested causes recursively', async () => {
 			const root = new Error('root');
 			const mid = new Error('middle', { cause: root });
 			const err = new Error('outer', { cause: mid });
-			const body = (await apiErrorResponse(err, 'fallback', true).json()) as { cause: Record<string, unknown> };
-			expect(body.cause.cause).toEqual({ name: 'Error', message: 'root' });
-		});
-
-		it('omits cause key when no cause', async () => {
-			const body = await apiErrorResponse(new Error('no cause'), 'fallback', true).json();
-			expect(body).not.toHaveProperty('cause');
+			const res = apiErrorResponse(err, 'fallback', true);
+			expect(await res.json()).toEqual({ errors: ['outer', 'middle', 'root'] });
 		});
 
 		it('handles non-Error values', async () => {
 			const res = apiErrorResponse('string error', 'fallback', true);
 			expect(res.status).toBe(500);
-			expect(await res.json()).toEqual({ success: false, error: 'string error' });
+			expect(await res.json()).toEqual({ errors: ['string error'] });
 		});
 	});
 });

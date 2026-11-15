@@ -1,6 +1,37 @@
 # Response Helpers
 
-`rwsdk-atp/response` provides five helpers that convert data and errors into consistent HTTP responses. Two target JSON API routes, two target server actions, and one handles Zod validation errors separately.
+`rwsdk-atp/response` exports helpers for consistent HTTP responses and server action state. Two target JSON API routes, two target server actions, and one formats action state for form libraries.
+
+## `ApiResponse<T>`
+
+The response body type for JSON API routes. A discriminated union on `errors`:
+
+```ts
+type ApiResponse<T> = { data: T; errors?: never } | { data?: never; errors: string[] | Record<string, string[]> };
+```
+
+Success responses carry `data`. Error responses carry `errors` — a `string[]` for generic errors or a `Record<string, string[]>` for field-level validation errors keyed by field name.
+
+Narrow on `errors` to get TypeScript to narrow the type:
+
+```ts
+const body = await res.json() as ApiResponse<Stance>;
+
+if (!body.errors) {
+	return body.data; // Stance
+}
+// body.errors: string[] | Record<string, string[]>
+```
+
+If you just need all messages regardless of shape, flatten them:
+
+```ts
+function getErrorMessages(errors: string[] | Record<string, string[]>): string[] {
+	return Array.isArray(errors) ? errors : Object.values(errors).flat();
+}
+```
+
+For field-level validation errors (from Zod), the keys are dot-joined field paths — `'color'`, `'address.street'` — and the special key `'_form'` holds errors that have no path.
 
 ## `ActionState<T>`
 
@@ -24,7 +55,7 @@ These return a `Response` and are for use in HTTP route handlers.
 apiSuccessResponse<T>(data: T, status = 200): Response
 ```
 
-Wraps data in `{ success: true, data }`:
+Returns `{ data }`:
 
 ```ts
 import { apiSuccessResponse } from 'rwsdk-atp/response';
@@ -41,16 +72,19 @@ apiErrorResponse(err: unknown, fallbackMessage: string, verboseErrors: boolean):
 
 Converts a caught error to a `Response`. Typed errors are surfaced directly; everything else is masked behind `fallbackMessage` unless `verboseErrors` is true.
 
-| Error type                           | `verboseErrors` | Result                                      |
-| ------------------------------------ | --------------- | ------------------------------------------- |
-| `AccessError`                        | either          | `err.code` status, `err.message`            |
-| `RepositoryError` with `code < 500`  | either          | `err.code` status, `err.message`            |
-| `RepositoryError` with `code >= 500` | `false`         | 500, `fallbackMessage`                      |
-| `RepositoryError` with `code >= 500` | `true`          | 500, `err.message` + serialized cause chain |
-| Other `Error`                        | `false`         | 500, `fallbackMessage`                      |
-| Other `Error`                        | `true`          | 500, `err.message` + serialized cause chain |
+| Error type                           | `verboseErrors` | Status     | `errors`                                       |
+| ------------------------------------ | --------------- | ---------- | ---------------------------------------------- |
+| Zod-like (has `issues`)              | either          | 400        | `Record<string, string[]>` keyed by field path |
+| `AccessError`                        | either          | `err.code` | `[err.message]`                                |
+| `RepositoryError` with `code < 500`  | either          | `err.code` | `[err.message]`                                |
+| `RepositoryError` with `code >= 500` | `false`         | 500        | `[fallbackMessage]`                            |
+| `RepositoryError` with `code >= 500` | `true`          | 500        | full cause chain                               |
+| Other `Error`                        | `false`         | 500        | `[fallbackMessage]`                            |
+| Other `Error`                        | `true`          | 500        | full cause chain                               |
 
-Pass `verboseErrors` based on your environment — `import.meta.env.DEV` is a typical choice. Rather than passing it at every call site, most apps wrap this once at the application layer:
+"Full cause chain" means `[err.message, cause.message, ...]` — all messages from the error and its cause chain flattened into the array.
+
+Pass `verboseErrors` based on your environment — `import.meta.env.DEV` is a typical choice. Rather than threading it through every call site, wrap it once at the application layer:
 
 ```ts
 // src/api/utils.ts
@@ -90,7 +124,7 @@ import { actionValidationError } from 'rwsdk-atp/response';
 
 const result = schema.safeParse(input);
 if (!result.success) {
-    return actionValidationError(result.error.flatten().fieldErrors);
+	return actionValidationError(result.error.flatten().fieldErrors);
 }
 ```
 
@@ -106,9 +140,9 @@ For unexpected errors caught in action handlers. Follows the same `verboseErrors
 import { actionErrorResponse } from 'rwsdk-atp/response';
 
 try {
-    // ...
+	// ...
 } catch (err) {
-    return actionErrorResponse(err, 'Failed to save changes', import.meta.env.DEV);
+	return actionErrorResponse(err, 'Failed to save changes', import.meta.env.DEV);
 }
 ```
 

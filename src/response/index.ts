@@ -1,36 +1,50 @@
 import { AccessError, RepositoryError } from '../errors';
 
+export type ApiResponse<T> = { data: T; errors?: never } | { data?: never; errors: string[] | Record<string, string[]> };
+
 export type ActionState<T> =
 	| { success: true; code: number; data: T }
 	| { success: false; code: number; errors: Record<string, string[]> };
 
+type ZodIssue = { path: Array<string | number>; message: string };
+
+function isZodLikeError(err: unknown): err is { issues: ZodIssue[] } {
+	return err instanceof Error && 'issues' in err && Array.isArray((err as Record<string, unknown>).issues);
+}
+
+function flattenZodIssues(issues: ZodIssue[]): Record<string, string[]> {
+	const errors: Record<string, string[]> = {};
+	for (const issue of issues) {
+		const key = issue.path.length > 0 ? issue.path.map(String).join('.') : '_form';
+		if (!errors[key]) errors[key] = [];
+		errors[key].push(issue.message);
+	}
+	return errors;
+}
+
 export function apiSuccessResponse<T>(data: T, status = 200): Response {
-	return Response.json({ success: true, data }, { status });
+	return Response.json({ data }, { status });
 }
 
 export function apiErrorResponse(err: unknown, fallbackMessage: string, verboseErrors: boolean): Response {
+	if (isZodLikeError(err)) {
+		return Response.json({ errors: flattenZodIssues(err.issues) }, { status: 400 });
+	}
 	if (err instanceof AccessError) {
-		return Response.json({ success: false, error: err.message }, { status: err.code });
+		return Response.json({ errors: [err.message] }, { status: err.code });
 	}
 	if (err instanceof RepositoryError && err.code < 500) {
-		return Response.json({ success: false, error: err.message }, { status: err.code });
+		return Response.json({ errors: [err.message] }, { status: err.code });
 	}
 
 	const status = 500;
 	if (verboseErrors) {
 		if (err instanceof Error) {
-			return Response.json(
-				{
-					success: false,
-					error: err.message,
-					...(err.cause !== undefined ? { cause: serializeCause(err.cause) } : {}),
-				},
-				{ status },
-			);
+			return Response.json({ errors: buildErrorChain(err) }, { status });
 		}
-		return Response.json({ success: false, error: String(err) }, { status });
+		return Response.json({ errors: [String(err)] }, { status });
 	}
-	return Response.json({ success: false, error: fallbackMessage }, { status });
+	return Response.json({ errors: [fallbackMessage] }, { status });
 }
 
 export function actionSuccessResponse<T>(data: T, status = 200): ActionState<T> {
@@ -67,17 +81,6 @@ export function actionErrorResponse<T>(err: unknown, fallbackMessage: string, ve
 	}
 
 	return { success: false, code: 500, errors: { _form: [String(err)] } };
-}
-
-function serializeCause(cause: unknown): unknown {
-	if (cause instanceof Error) {
-		return {
-			name: cause.name,
-			message: cause.message,
-			...(cause.cause !== undefined ? { cause: serializeCause(cause.cause) } : {}),
-		};
-	}
-	return cause;
 }
 
 function buildErrorChain(err: Error): string[] {
