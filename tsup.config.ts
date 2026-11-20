@@ -11,10 +11,11 @@ export default defineConfig({
 		tap: 'src/tap/index.ts',
 		utils: 'src/utils/index.ts',
 		vite: 'src/vite/index.ts',
+		'worker-error': 'src/worker-error/index.tsx',
 	},
 	format: ['esm'],
 	dts: true,
 	clean: true,
 	sourcemap: true,
-	external: ['cloudflare:workers'],
+	external: ['cloudflare:workers', 'react', 'react/jsx-runtime'],
 });

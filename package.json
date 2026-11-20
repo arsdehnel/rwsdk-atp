@@ -44,6 +44,10 @@
 		"./vite": {
 			"import": "./dist/vite.js",
 			"types": "./dist/vite.d.ts"
+		},
+		"./worker-error": {
+			"import": "./dist/worker-error.js",
+			"types": "./dist/worker-error.d.ts"
 		}
 	},
 	"main": "src/index.ts",
@@ -82,6 +86,7 @@
 		"@commitlint/cli": "^21.2.4",
 		"@commitlint/config-conventional": "^20.4.1",
 		"@types/node": "^26.6.2",
+		"@types/react": "^19",
 		"@vitest/coverage-v8": "^5.1.0",
 		"husky": "^9.1.7",
 		"knip": "^6.32.2",
@@ -96,6 +101,7 @@
 		"vitest": "^5.1.0"
 	},
 	"peerDependencies": {
+		"react": "^19",
 		"rwsdk": "1.7.5",
 		"vite": "8.3.5"
 	},
