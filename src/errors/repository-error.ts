@@ -43,3 +43,12 @@ export class InvalidDIDError extends RepositoryError {
 		this.name = 'InvalidDIDError';
 	}
 }
+
+export class MissingAtpRecordError extends RepositoryError {
+	public readonly code = 500;
+
+	constructor(entity: string, id: string) {
+		super(`${entity} ${id} has no ATP record`);
+		this.name = 'MissingAtpRecordError';
+	}
+}

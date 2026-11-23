@@ -36,7 +36,7 @@ export default defineConfig({
 
 **Durable Objects** store per-user data that needs to be consistent and durable:
 - `BrowserSessionDurableObject`: stores browser session data, keyed by session ID
-- `OAuthTokenDurableObject`: stores OAuth tokens, keyed by user DID
+- `AtpOAuthDurableObject`: stores OAuth tokens and app-password sessions, keyed by DID
 
 **KV namespace** (`KV_OAUTH_STATE`) holds short-lived OAuth state during the authorization flow — the PKCE verifier and other parameters that need to survive a redirect round-trip to the PDS.
 
@@ -57,7 +57,7 @@ export default defineConfig({
 	"durable_objects": {
 		"bindings": [
 			{ "name": "DO_BROWSER_SESSION", "class_name": "BrowserSessionDurableObject" },
-			{ "name": "DO_OAUTH_TOKEN", "class_name": "OAuthTokenDurableObject" }
+			{ "name": "DO_ATP_AUTH", "class_name": "OAuthTokenDurableObject" }
 		]
 	},
 	"exports": {
@@ -88,7 +88,7 @@ Cloudflare needs to find the Durable Object class definitions to route requests 
 ```ts
 // src/worker.tsx
 export { BrowserSessionDurableObject } from 'rwsdk-atp/browser-sessions';
-export { OAuthTokenDurableObject } from 'rwsdk-atp/oauth';
+export { AtpOAuthDurableObject } from 'rwsdk-atp/auth';
 ```
 
 ## Logger middleware
@@ -150,7 +150,7 @@ Three route handlers implement the full AT Protocol OAuth PKCE flow: initiation,
 // src/api/oauth/login.ts
 import { env } from 'cloudflare:workers';
 import type { RequestInfo } from 'rwsdk/worker';
-import { getOAuthClient } from 'rwsdk-atp/oauth';
+import { getOAuthClient } from 'rwsdk-atp/auth';
 
 async function post({ ctx, request }: RequestInfo): Promise<Response> {
 	const { handle } = (await request.json()) as { handle?: string };
@@ -179,7 +179,7 @@ export default { post };
 import { env } from 'cloudflare:workers';
 import type { RequestInfo } from 'rwsdk/worker';
 import { saveSession } from 'rwsdk-atp/browser-sessions';
-import { getOAuthClient, type OAuthSession } from 'rwsdk-atp/oauth';
+import { getOAuthClient, type OAuthSession } from 'rwsdk-atp/auth';
 
 async function get({ ctx, request, response }: RequestInfo): Promise<Response> {
 	const client = await getOAuthClient(env);
@@ -207,7 +207,7 @@ export default { get };
 import { env } from 'cloudflare:workers';
 import type { RequestInfo } from 'rwsdk/worker';
 import { clearSession, loadSessionFromRequest } from 'rwsdk-atp/browser-sessions';
-import { getOAuthClient } from 'rwsdk-atp/oauth';
+import { getOAuthClient } from 'rwsdk-atp/auth';
 
 async function post({ request, response }: RequestInfo): Promise<Response> {
 	const session = await loadSessionFromRequest(env, request, response.headers);
@@ -262,7 +262,7 @@ The session cookie stores only the user's DID — a lightweight identifier. Maki
 ```ts
 import { env } from 'cloudflare:workers';
 import { Client } from '@atproto/lex';
-import { getOAuthClient } from 'rwsdk-atp/oauth';
+import { getOAuthClient } from 'rwsdk-atp/auth';
 
 const oauthClient = await getOAuthClient(env);
 const oauthSession = await oauthClient.restore(did);

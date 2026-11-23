@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	InvalidDIDError,
 	InvalidUUIDError,
+	MissingAtpRecordError,
 	NoRecordFoundError,
 	RepositoryError,
 	TooManyRecordsFoundError,
@@ -13,6 +14,7 @@ describe('RepositoryError (base)', () => {
 		expect(new TooManyRecordsFoundError('User', 3, 1)).toBeInstanceOf(Error);
 		expect(new InvalidUUIDError('abc', 'User')).toBeInstanceOf(Error);
 		expect(new InvalidDIDError('abc', 'User')).toBeInstanceOf(Error);
+		expect(new MissingAtpRecordError('topic', 'abc123')).toBeInstanceOf(Error);
 	});
 
 	it('all subclasses are instances of RepositoryError', () => {
@@ -20,6 +22,7 @@ describe('RepositoryError (base)', () => {
 		expect(new TooManyRecordsFoundError('User', 3, 1)).toBeInstanceOf(RepositoryError);
 		expect(new InvalidUUIDError('abc', 'User')).toBeInstanceOf(RepositoryError);
 		expect(new InvalidDIDError('abc', 'User')).toBeInstanceOf(RepositoryError);
+		expect(new MissingAtpRecordError('topic', 'abc123')).toBeInstanceOf(RepositoryError);
 	});
 });
 
@@ -93,5 +96,22 @@ describe('InvalidDIDError', () => {
 	it('has name InvalidDIDError', () => {
 		const err = new InvalidDIDError('not-a-did', 'User');
 		expect(err.name).toBe('InvalidDIDError');
+	});
+});
+
+describe('MissingAtpRecordError', () => {
+	it('formats the message with the entity and id', () => {
+		const err = new MissingAtpRecordError('topic', 'abc123');
+		expect(err.message).toBe('topic abc123 has no ATP record');
+	});
+
+	it('has code 500', () => {
+		const err = new MissingAtpRecordError('topic', 'abc123');
+		expect(err.code).toBe(500);
+	});
+
+	it('has name MissingAtpRecordError', () => {
+		const err = new MissingAtpRecordError('topic', 'abc123');
+		expect(err.name).toBe('MissingAtpRecordError');
 	});
 });

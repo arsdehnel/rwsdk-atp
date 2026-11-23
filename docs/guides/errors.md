@@ -103,6 +103,25 @@ if (!isValidDid(did)) {
 | `value`  | `string` | The invalid DID that was provided       |
 | `entity` | `string` | Name of the record type being looked up |
 
+### `MissingAtpRecordError`
+
+An operation requires an entity to have an ATP record (URI + CID) but none exists. Always `500` — this indicates a data consistency problem: the entity should have been synced to the PDS before this operation was attempted.
+
+```ts
+import { MissingAtpRecordError } from 'rwsdk-atp/errors';
+
+if (!topic.atpUri || !topic.atpCid) {
+	throw new MissingAtpRecordError('topic', topic.id);
+}
+// message: 'topic abc123 has no ATP record'
+// code: 500
+```
+
+| Argument | Type     | Description                                     |
+| -------- | -------- | ----------------------------------------------- |
+| `entity` | `string` | Name of the entity type (e.g. `'topic'`)        |
+| `id`     | `string` | ID of the entity that is missing its ATP record |
+
 ## `StepError`
 
 For Cloudflare Workflow steps. Separates the message you show users from the detail you log internally, and signals whether the step should be retried.

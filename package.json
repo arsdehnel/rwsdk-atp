@@ -9,6 +9,10 @@
 	"sideEffects": false,
 	"type": "module",
 	"exports": {
+		"./auth": {
+			"import": "./dist/auth.js",
+			"types": "./dist/auth.d.ts"
+		},
 		"./browser-sessions": {
 			"import": "./dist/browser-sessions.js",
 			"types": "./dist/browser-sessions.d.ts"

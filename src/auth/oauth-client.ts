@@ -1,7 +1,7 @@
 import { buildAtprotoLoopbackClientMetadata, NodeOAuthClient } from '@atproto/oauth-client-node';
-import { tokenStore } from './oauth-token-store';
-import { requestLock } from './request-lock';
-import { stateStore } from './state-store';
+import { tokenStore } from '../oauth/oauth-token-store';
+import { requestLock } from '../oauth/request-lock';
+import { stateStore } from '../oauth/state-store';
 import type { OAuthClientEnv } from './types';
 
 export async function getOAuthClient(env: OAuthClientEnv): Promise<NodeOAuthClient> {
@@ -41,7 +41,7 @@ export async function getOAuthClient(env: OAuthClientEnv): Promise<NodeOAuthClie
 					redirect_uris: ['http://127.0.0.1:5173/api/oauth/callback'],
 				}),
 		stateStore: stateStore(env.KV_OAUTH_STATE, env.OAUTH_STATE_KV_ENCRYPTION_KEYS),
-		sessionStore: tokenStore(env.DO_OAUTH_TOKEN),
-		requestLock: requestLock(env.DO_OAUTH_TOKEN),
+		sessionStore: tokenStore(env.DO_ATP_AUTH),
+		requestLock: requestLock(env.DO_ATP_AUTH),
 	});
 }

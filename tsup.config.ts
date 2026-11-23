@@ -2,6 +2,7 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
 	entry: {
+		auth: 'src/auth/index.ts',
 		'browser-sessions': 'src/browser-sessions/index.ts',
 		errors: 'src/errors/index.ts',
 		logger: 'src/logger/index.ts',
