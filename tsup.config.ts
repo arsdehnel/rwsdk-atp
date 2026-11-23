@@ -17,5 +17,5 @@ export default defineConfig({
 	dts: true,
 	clean: true,
 	sourcemap: true,
-	external: ['cloudflare:workers', 'react', 'react/jsx-runtime'],
+	external: ['cloudflare:workers', 'react', 'react/jsx-runtime', '@atproto/lex', '@atproto/lex-password-session'],
 });

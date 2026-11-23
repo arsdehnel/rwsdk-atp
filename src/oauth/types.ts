@@ -1,6 +1,6 @@
 export type { NodeOAuthClient, OAuthSession } from '@atproto/oauth-client-node';
 
-import type { OAuthTokenDurableObject } from './durable-object';
+import type { AtpOAuthDurableObject } from './durable-object';
 
 export interface OAuthTokenEnv {
 	OAUTH_TOKEN_KV_ENCRYPTION_KEYS: string;
@@ -13,5 +13,5 @@ export interface OAuthClientEnv {
 	APP_URL?: string;
 	OAUTH_STATE_KV_ENCRYPTION_KEYS: string;
 	KV_OAUTH_STATE: KVNamespace;
-	DO_OAUTH_TOKEN: DurableObjectNamespace<OAuthTokenDurableObject>;
+	DO_OAUTH_TOKEN: DurableObjectNamespace<AtpOAuthDurableObject>;
 }

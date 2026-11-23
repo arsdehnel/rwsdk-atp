@@ -4,14 +4,14 @@ import { decrypt, encrypt, parseKeyRing } from '../crypto';
 import { createDoLogger, type Logger } from '../logger';
 import type { OAuthTokenEnv } from './types';
 
-export class OAuthTokenDurableObject extends DurableObject {
+export class AtpOAuthDurableObject extends DurableObject {
 	private tokenData: NodeSavedSession | undefined = undefined;
 	private locked = false;
 	private lockQueue: Array<() => void> = [];
 	private lockAcquiredAtTimestamp: number | undefined = undefined;
 	private logger: Logger = createDoLogger(
 		{
-			doClassName: 'OAuthTokenDurableObject',
+			doClassName: 'AtpOAuthDurableObject',
 		},
 		true,
 	);
@@ -76,6 +76,38 @@ export class OAuthTokenDurableObject extends DurableObject {
 		this.tokenData = undefined;
 		await this.ctx.storage.delete('tokenData');
 		this.logger.info(`Delete token`);
+	}
+
+	async getPasswordToken(): Promise<Record<string, unknown> | undefined> {
+		const raw = await this.ctx.storage.get<string>('passwordTokenData');
+		if (!raw) return undefined;
+
+		const keys = parseKeyRing(this.typedEnv.OAUTH_TOKEN_KV_ENCRYPTION_KEYS);
+		for (let i = 0; i < keys.length; i++) {
+			try {
+				const plaintext = await decrypt(raw, keys[i]);
+				const data = JSON.parse(plaintext) as Record<string, unknown>;
+				if (i > 0) {
+					const encrypted = await encrypt(plaintext, keys[0]);
+					await this.ctx.storage.put<string>('passwordTokenData', encrypted);
+				}
+				return data;
+			} catch {
+				if (i === keys.length - 1) throw new Error(`Password token decryption failed, no more keys to try`);
+			}
+		}
+	}
+
+	async setPasswordToken(data: Record<string, unknown>): Promise<void> {
+		const keys = parseKeyRing(this.typedEnv.OAUTH_TOKEN_KV_ENCRYPTION_KEYS);
+		const encrypted = await encrypt(JSON.stringify(data), keys[0]);
+		await this.ctx.storage.put<string>('passwordTokenData', encrypted);
+		this.logger.info(`Set password token`);
+	}
+
+	async deletePasswordToken(): Promise<void> {
+		await this.ctx.storage.delete('passwordTokenData');
+		this.logger.info(`Delete password token`);
 	}
 
 	async acquireLock(): Promise<void> {

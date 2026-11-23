@@ -1,7 +1,7 @@
 import type { NodeSavedSession, NodeSavedSessionStore } from '@atproto/oauth-client-node';
-import type { OAuthTokenDurableObject } from './durable-object';
+import type { AtpOAuthDurableObject } from './durable-object';
 
-export function tokenStore(tokenDOBinding: DurableObjectNamespace<OAuthTokenDurableObject>): NodeSavedSessionStore {
+export function tokenStore(tokenDOBinding: DurableObjectNamespace<AtpOAuthDurableObject>): NodeSavedSessionStore {
 	return {
 		async get(did: string): Promise<NodeSavedSession | undefined> {
 			const doStub = await tokenDOBinding.getByName(did);
