@@ -24,7 +24,7 @@ export default defineConfig({
 					branches: 75,
 				},
 				'src/oauth/**': {
-					branches: 12,
+					branches: 32,
 				},
 				'src/tap/**': {
 					branches: 100,
