@@ -30,7 +30,7 @@ const makeNamespace = (stub = makeDoStub()) => ({
 	stub,
 	namespace: {
 		getByName: vi.fn().mockResolvedValue(stub),
-	} as unknown as DurableObjectNamespace<unknown>,
+	} as unknown as DurableObjectNamespace<any>,
 });
 
 const fakeSession = { session: 'fake-session-object' };
@@ -87,7 +87,8 @@ describe('getPasswordSession', () => {
 		await getPasswordSession(namespace, 'did:plc:service', loginOptions);
 
 		const updateData = { accessJwt: 'refreshed-token' };
-		capturedOnUpdated!(updateData);
+		if (!capturedOnUpdated) throw new Error('onUpdated was not captured by mockLogin');
+		capturedOnUpdated(updateData);
 		await Promise.resolve(); // let the void promise settle
 		expect(stub.setPasswordToken).toHaveBeenCalledWith(updateData);
 	});
@@ -101,7 +102,8 @@ describe('getPasswordSession', () => {
 		});
 		await getPasswordSession(namespace, 'did:plc:service', loginOptions);
 
-		capturedOnDeleted!();
+		if (!capturedOnDeleted) throw new Error('onDeleted was not captured by mockLogin');
+		capturedOnDeleted();
 		await Promise.resolve();
 		expect(stub.deletePasswordToken).toHaveBeenCalledOnce();
 	});
