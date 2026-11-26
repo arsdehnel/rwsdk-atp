@@ -110,12 +110,11 @@
 		"rwsdk": "1.7.5",
 		"vite": "8.3.5"
 	},
-	"packageManager": "pnpm@12.16.1",
 	"devEngines": {
 		"packageManager": {
 			"name": "pnpm",
 			"version": "12.16.1",
-			"onFail": "download"
+			"onFail": "warn"
 		}
 	},
 	"publishConfig": {
