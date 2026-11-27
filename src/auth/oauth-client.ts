@@ -27,7 +27,7 @@ export async function getOAuthClient(env: OAuthClientEnv): Promise<NodeOAuthClie
 		// special case recognized by bsky.social and other AT Protocol PDS instances).
 		clientMetadata: appUrl
 			? {
-					client_id: `${appUrl}/api/client-metadata.json`,
+					client_id: `${appUrl}/api/oauth/client-metadata.json`,
 					scope: env.ATPROTO_OAUTH_SCOPE,
 					redirect_uris: [`${appUrl}/api/oauth/callback`],
 					response_types: ['code'],
