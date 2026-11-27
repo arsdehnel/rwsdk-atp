@@ -39,7 +39,7 @@ function getDryRunConfig() {
 
 function getCIConfig() {
 	return {
-		repositoryUrl: 'https://github.com/kad-products/shed',
+		repositoryUrl: 'https://github.com/arsdehnel/rwsdk-atp',
 		branches: ['main'],
 		plugins: [
 			[

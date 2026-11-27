@@ -1,7 +1,6 @@
 {
-	"name": "rwsdk-atp",
+	"name": "@arsdehnel/rwsdk-atp",
 	"version": "0.0.1",
-	"private": true,
 	"description": "Utilities for making a RedwoodSDK app work nicely on the AT Protocol",
 	"keywords": [],
 	"license": "ISC",
@@ -118,6 +117,7 @@
 		}
 	},
 	"publishConfig": {
-		"access": "restricted"
+		"access": "restricted",
+		"registry": "https://npm.pkg.github.com"
 	}
 }

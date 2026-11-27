@@ -1,0 +1,25 @@
+name: Verify Changes
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-code:
+    uses: arsdehnel/automation/.github/workflows/lint-code.yaml@main
+    permissions:
+      contents: read
+    secrets: inherit
+
+  run-tests:
+    uses: arsdehnel/automation/.github/workflows/run-tests.yaml@main
+    permissions:
+      contents: read
+    secrets: inherit
+
+  create-release-dry-run:
+    uses: arsdehnel/automation/.github/workflows/create-release-dry-run.yaml@main
+    permissions:
+      contents: read
+      pull-requests: write
+    secrets: inherit

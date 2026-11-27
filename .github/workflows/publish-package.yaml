@@ -1,0 +1,14 @@
+name: Publish Package
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  publish-package:
+    uses: arsdehnel/automation/.github/workflows/publish-package.yaml@main
+    permissions:
+      contents: read
+      packages: write
+    secrets: inherit
