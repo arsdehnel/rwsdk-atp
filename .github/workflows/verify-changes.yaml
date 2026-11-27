@@ -23,3 +23,15 @@ jobs:
       contents: read
       pull-requests: write
     secrets: inherit
+
+  plan-github-setup:
+    uses: arsdehnel/automation/.github/workflows/plan-open-tofu.yaml@main
+    with:
+      app-name: ${{github.event.repository.name}}
+      state-type: github
+      state-name: setup
+      working-directory: infra/github
+    permissions:
+      contents: read
+      pull-requests: write
+    secrets: inherit
