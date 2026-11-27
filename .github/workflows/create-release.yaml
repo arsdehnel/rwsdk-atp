@@ -1,0 +1,14 @@
+name: Create Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  create-release:
+    uses: arsdehnel/automation/.github/workflows/create-release.yaml@main
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    secrets: inherit

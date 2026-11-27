@@ -1,0 +1,3 @@
+{
+	"extends": ["github>arsdehnel/automation//renovate/default.jsonc"]
+}
