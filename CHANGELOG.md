@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/arsdehnel/rwsdk-atp/compare/v1.0.0...v1.0.1) (2026-11-28)
+
+### Bug Fixes
+
+* noop for new workflows ([2743398](https://github.com/arsdehnel/rwsdk-atp/commit/2743398cffb6fe5a8839ee65ec25e61aa54a60fc))
+
 ## 1.0.0 (2026-11-27)
 
 ### Features
