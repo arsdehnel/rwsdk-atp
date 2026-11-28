@@ -8,7 +8,7 @@
 
 ```ts
 // src/worker.tsx
-import { botMiddleware } from 'rwsdk-atp/middleware';
+import { botMiddleware } from '@arsdehnel/rwsdk-atp/middleware';
 
 const app = defineApp([
 	botMiddleware,
@@ -28,7 +28,7 @@ HSTS is only set outside of the dev server since HTTPS isn't available locally.
 
 ```ts
 // src/worker.tsx
-import { headersMiddleware } from 'rwsdk-atp/middleware';
+import { headersMiddleware } from '@arsdehnel/rwsdk-atp/middleware';
 
 const app = defineApp([
 	botMiddleware,
@@ -47,7 +47,7 @@ Preflight `OPTIONS` requests are handled automatically with a `204` response. Fo
 
 ```ts
 // src/middleware/cors.ts
-import { createCorsMiddleware } from 'rwsdk-atp/middleware';
+import { createCorsMiddleware } from '@arsdehnel/rwsdk-atp/middleware';
 
 export const corsMiddleware = createCorsMiddleware({
 	'/api/import': ['POST'],

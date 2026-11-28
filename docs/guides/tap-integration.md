@@ -37,7 +37,7 @@ Add a route handler that delegates to `tapWebhookHandler`. The handler parses th
 // src/api/webhooks/tap.ts
 import { env } from 'cloudflare:workers';
 import type { RequestInfo } from 'rwsdk/worker';
-import { tapWebhookHandler } from 'rwsdk-atp/tap';
+import { tapWebhookHandler } from '@arsdehnel/rwsdk-atp/tap';
 import tapRegistrations from '@/tap/registrations';
 
 async function post({ ctx, request }: RequestInfo): Promise<Response> {
@@ -61,7 +61,7 @@ A **queue consumer** (`TapRegistrationQueueConsumer`) receives events via the Cl
 
 ```ts
 // src/tap/registrations.ts
-import { TapRegistrations } from 'rwsdk-atp/tap';
+import { TapRegistrations } from '@arsdehnel/rwsdk-atp/tap';
 import myConsumer from './my-consumer';
 
 const tapRegistrations = new TapRegistrations();
@@ -72,8 +72,8 @@ export default tapRegistrations;
 
 ```ts
 // src/tap/my-consumer.ts
-import { type RecordEvent, TapRegistrationQueueConsumer } from 'rwsdk-atp/tap';
-import type { Logger } from 'rwsdk-atp/logger';
+import { type RecordEvent, TapRegistrationQueueConsumer } from '@arsdehnel/rwsdk-atp/tap';
+import type { Logger } from '@arsdehnel/rwsdk-atp/logger';
 
 async function queueConsumer(msg: RecordEvent, ctx: { logger: Logger }): Promise<void> {
 	ctx.logger.info(`Processing event: ${msg.collection} ${msg.action} by ${msg.did}`);

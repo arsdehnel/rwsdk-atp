@@ -13,7 +13,7 @@ For HTTP request handlers. Uses the Cloudflare `cf-ray` header as the correlatio
 ```ts
 // src/middleware/logger.ts
 import type { DefaultAppContext, RequestInfo } from 'rwsdk/worker';
-import { createRequestLogger } from 'rwsdk-atp/logger';
+import { createRequestLogger } from '@arsdehnel/rwsdk-atp/logger';
 
 export default function loggerMiddleware({ ctx, request }: RequestInfo<DefaultAppContext>): void {
 	ctx.logger = createRequestLogger(request, import.meta.env.DEV);
@@ -39,7 +39,7 @@ For queue consumers. Includes the queue name in every entry.
 ```ts
 // src/tap/my-consumer.ts
 import type { MessageBatch } from '@cloudflare/workers-types';
-import { createQueueLogger } from 'rwsdk-atp/logger';
+import { createQueueLogger } from '@arsdehnel/rwsdk-atp/logger';
 
 export default {
 	async queue(batch: MessageBatch, env: Env): Promise<void> {
@@ -58,7 +58,7 @@ For Cloudflare Workflows. Includes `instanceId`, `workflowName`, and `triggeredA
 ```ts
 // src/workflows/my-workflow.ts
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
-import { createWorkflowLogger } from 'rwsdk-atp/logger';
+import { createWorkflowLogger } from '@arsdehnel/rwsdk-atp/logger';
 
 export class MyWorkflow {
 	async run(event: WorkflowEvent<Params>, step: WorkflowStep): Promise<void> {
@@ -72,7 +72,7 @@ export class MyWorkflow {
 For Durable Objects. Takes a context object whose fields are included in every entry — typically the DO class name and any instance identifier.
 
 ```ts
-import { createDoLogger } from 'rwsdk-atp/logger';
+import { createDoLogger } from '@arsdehnel/rwsdk-atp/logger';
 
 export class MyDurableObject {
 	private logger = createDoLogger({ do: 'MyDurableObject' }, import.meta.env.DEV);
@@ -84,7 +84,7 @@ export class MyDurableObject {
 Drops all log entries silently. Useful in tests when you don't want log output but code expects a `Logger`.
 
 ```ts
-import { createNoopLogger } from 'rwsdk-atp/logger';
+import { createNoopLogger } from '@arsdehnel/rwsdk-atp/logger';
 
 const logger = createNoopLogger();
 ```
