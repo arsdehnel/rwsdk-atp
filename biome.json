@@ -39,7 +39,8 @@
 			"!**/test-results",
 			"!**/.pnpm-store",
 			"!docs/.vitepress/cache",
-			"!docs/.vitepress/dist"
+			"!docs/.vitepress/dist",
+			"!CHANGELOG.md"
 		]
 	},
 	"overrides": [
