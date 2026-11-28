@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/arsdehnel/rwsdk-atp/compare/v1.0.1...v1.0.2) (2026-11-28)
+
+### Bug Fixes
+
+* adjust biome versions ([d75fc72](https://github.com/arsdehnel/rwsdk-atp/commit/d75fc72b814d1aee74464575fac8ac18c25f5ce8))
+* vars streamlining and better patterns for deployed environments ([b205737](https://github.com/arsdehnel/rwsdk-atp/commit/b205737bc5be0fe566494d65bbb4dd7377660b22))
+
 ## [1.0.1](https://github.com/arsdehnel/rwsdk-atp/compare/v1.0.0...v1.0.1) (2026-11-28)
 
 ### Bug Fixes
