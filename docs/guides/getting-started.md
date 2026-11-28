@@ -1,13 +1,19 @@
 # Getting Started
 
-This guide walks through integrating `rwsdk-atp` into a RedwoodSDK Cloudflare Workers app to add AT Protocol OAuth authentication and session management.
+This guide walks through integrating `@arsdehnel/rwsdk-atp` into a RedwoodSDK Cloudflare Workers app to add AT Protocol OAuth authentication and session management.
 
 ## Installation
 
-Right now this is only available via Tangled as I'm working out how to get it to an AT Protocol-friendly NPM-compatible registry.
+`@arsdehnel/rwsdk-atp` is published to GitHub Packages. Add the registry mapping to your project's `.npmrc`:
+
+```
+@arsdehnel:registry=https://npm.pkg.github.com
+```
+
+Then install the package:
 
 ```sh
-pnpm add git+https://tangled.org/arsdehnel.com/rwsdk-atp.git
+pnpm add @arsdehnel/rwsdk-atp
 ```
 
 ## Vite plugin
@@ -19,7 +25,7 @@ The `host: '127.0.0.1'` binding is required because the AT Protocol OAuth flow r
 ```ts
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { redwood } from 'rwsdk/vite';
-import { rwsdkAtp } from 'rwsdk-atp/vite';
+import { rwsdkAtp } from '@arsdehnel/rwsdk-atp/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -46,6 +52,8 @@ export default defineConfig({
 - `OAUTH_TOKEN_KV_ENCRYPTION_KEYS`: encrypts OAuth tokens stored in the Durable Object
 
 **Vars** configure runtime behavior:
+- `APP_BASE_URL`: the app's public base URL (scheme + host + optional port, no trailing slash). Used as the OAuth `client_id` base and redirect URI base. Required in all environments.
+- `ATPROTO_OAUTH_USE_LOOPBACK_OVERRIDE`: set to `"true"` to use the AT Protocol loopback client instead of a discoverable client. Required for local development against real AT Protocol PDS instances (e.g. bsky.social). Omit in production and in Docker devnets that run a local PDS.
 - `ATPROTO_OAUTH_SCOPE`: space-separated OAuth scopes your app requests. `atproto` is the minimum; add lexicon-specific scopes (e.g. `repo:xyz.statusphere.status`) for collections you need write access to.
 - `SESSION_ID_COOKIE_KEY`: the cookie name used for the session ID
 - `SESSION_TIMEOUT_SECONDS`: how long a session stays valid (1209600 = 14 days)
@@ -57,18 +65,20 @@ export default defineConfig({
 	"durable_objects": {
 		"bindings": [
 			{ "name": "DO_BROWSER_SESSION", "class_name": "BrowserSessionDurableObject" },
-			{ "name": "DO_ATP_AUTH", "class_name": "OAuthTokenDurableObject" }
+			{ "name": "DO_ATP_AUTH", "class_name": "AtpOAuthDurableObject" }
 		]
 	},
 	"exports": {
 		"BrowserSessionDurableObject": { "type": "durable-object", "storage": "sqlite" },
-		"OAuthTokenDurableObject": { "type": "durable-object", "storage": "sqlite" }
+		"AtpOAuthDurableObject": { "type": "durable-object", "storage": "sqlite" }
 	},
 	"kv_namespaces": [{ "binding": "KV_OAUTH_STATE", "id": "<your-kv-namespace-id>" }],
 	"secrets": {
 		"required": ["BROWSER_SESSION_SIGNING_KEY", "OAUTH_STATE_KV_ENCRYPTION_KEYS", "OAUTH_TOKEN_KV_ENCRYPTION_KEYS"]
 	},
 	"vars": {
+		"APP_BASE_URL": "http://127.0.0.1:5173",
+		"ATPROTO_OAUTH_USE_LOOPBACK_OVERRIDE": "true",
 		"ATPROTO_OAUTH_SCOPE": "atproto",
 		"SESSION_ID_COOKIE_KEY": "<your-app-name>-session-id",
 		"SESSION_TIMEOUT_SECONDS": 1209600
@@ -87,8 +97,8 @@ Cloudflare needs to find the Durable Object class definitions to route requests 
 
 ```ts
 // src/worker.tsx
-export { BrowserSessionDurableObject } from 'rwsdk-atp/browser-sessions';
-export { AtpOAuthDurableObject } from 'rwsdk-atp/auth';
+export { BrowserSessionDurableObject } from '@arsdehnel/rwsdk-atp/browser-sessions';
+export { AtpOAuthDurableObject } from '@arsdehnel/rwsdk-atp/oauth';
 ```
 
 ## Logger middleware
@@ -100,7 +110,7 @@ export { AtpOAuthDurableObject } from 'rwsdk-atp/auth';
 ```ts
 // src/middleware/logger.ts
 import type { DefaultAppContext, RequestInfo } from 'rwsdk/worker';
-import { createRequestLogger } from 'rwsdk-atp/logger';
+import { createRequestLogger } from '@arsdehnel/rwsdk-atp/logger';
 
 export default function loggerMiddleware({ ctx, request }: RequestInfo<DefaultAppContext>): void {
 	ctx.logger = createRequestLogger(request, import.meta.env.DEV);
@@ -131,7 +141,7 @@ The session middleware runs on every request and loads the current browser sessi
 // src/middleware/session.ts
 import { env } from 'cloudflare:workers';
 import type { DefaultAppContext, RequestInfo } from 'rwsdk/worker';
-import { loadSessionFromRequest } from 'rwsdk-atp/browser-sessions';
+import { loadSessionFromRequest } from '@arsdehnel/rwsdk-atp/browser-sessions';
 
 export default async function sessionMiddleware({ ctx, request, response }: RequestInfo<DefaultAppContext>): Promise<void> {
 	ctx.session = await loadSessionFromRequest(env, request, response.headers);
@@ -150,7 +160,7 @@ Three route handlers implement the full AT Protocol OAuth PKCE flow: initiation,
 // src/api/oauth/login.ts
 import { env } from 'cloudflare:workers';
 import type { RequestInfo } from 'rwsdk/worker';
-import { getOAuthClient } from 'rwsdk-atp/auth';
+import { getOAuthClient } from '@arsdehnel/rwsdk-atp/auth';
 
 async function post({ ctx, request }: RequestInfo): Promise<Response> {
 	const { handle } = (await request.json()) as { handle?: string };
@@ -178,8 +188,8 @@ export default { post };
 // src/api/oauth/callback.ts
 import { env } from 'cloudflare:workers';
 import type { RequestInfo } from 'rwsdk/worker';
-import { saveSession } from 'rwsdk-atp/browser-sessions';
-import { getOAuthClient, type OAuthSession } from 'rwsdk-atp/auth';
+import { saveSession } from '@arsdehnel/rwsdk-atp/browser-sessions';
+import { getOAuthClient, type OAuthSession } from '@arsdehnel/rwsdk-atp/auth';
 
 async function get({ ctx, request, response }: RequestInfo): Promise<Response> {
 	const client = await getOAuthClient(env);
@@ -206,8 +216,8 @@ export default { get };
 // src/api/oauth/logout.ts
 import { env } from 'cloudflare:workers';
 import type { RequestInfo } from 'rwsdk/worker';
-import { clearSession, loadSessionFromRequest } from 'rwsdk-atp/browser-sessions';
-import { getOAuthClient } from 'rwsdk-atp/auth';
+import { clearSession, loadSessionFromRequest } from '@arsdehnel/rwsdk-atp/browser-sessions';
+import { getOAuthClient } from '@arsdehnel/rwsdk-atp/auth';
 
 async function post({ request, response }: RequestInfo): Promise<Response> {
 	const session = await loadSessionFromRequest(env, request, response.headers);
@@ -262,7 +272,7 @@ The session cookie stores only the user's DID — a lightweight identifier. Maki
 ```ts
 import { env } from 'cloudflare:workers';
 import { Client } from '@atproto/lex';
-import { getOAuthClient } from 'rwsdk-atp/auth';
+import { getOAuthClient } from '@arsdehnel/rwsdk-atp/auth';
 
 const oauthClient = await getOAuthClient(env);
 const oauthSession = await oauthClient.restore(did);

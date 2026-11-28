@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockLogin, mockResume } = vi.hoisted(() => ({
 	mockLogin: vi.fn(),
@@ -14,6 +14,19 @@ vi.mock('@atproto/lex-password-session', () => ({
 
 import { getPasswordClient } from '../password-client';
 
+const TEST_DID = 'did:plc:service123';
+const TEST_PDS_URL = 'https://bsky.social';
+
+function makeDidDocResponse(pdsUrl = TEST_PDS_URL) {
+	return {
+		ok: true,
+		status: 200,
+		json: vi.fn().mockResolvedValue({
+			service: [{ id: '#atproto_pds', type: 'AtprotoPersonalDataServer', serviceEndpoint: pdsUrl }],
+		}),
+	};
+}
+
 const makeDoStub = (storedToken?: Record<string, unknown>) => ({
 	getPasswordToken: vi.fn().mockResolvedValue(storedToken),
 	setPasswordToken: vi.fn().mockResolvedValue(undefined),
@@ -26,20 +39,32 @@ const makeEnv = (stub = makeDoStub()) => ({
 		DO_ATP_AUTH: {
 			getByName: vi.fn().mockResolvedValue(stub),
 		} as unknown as DurableObjectNamespace<any>,
-		ATP_SERVICE_DID: 'did:plc:service',
+		ATP_SERVICE_DID: TEST_DID,
 		ATP_SERVICE_APP_PASSWORD: 'app-password-xyz',
-		ATPROTO_PDS_URL: 'https://bsky.social',
 	},
 });
 
 const fakeSession = { session: 'fake-session-object' };
 
+let fetchMock: ReturnType<typeof vi.fn>;
+
 describe('getPasswordClient', () => {
+	beforeEach(() => {
+		fetchMock = vi.fn().mockResolvedValue(makeDidDocResponse());
+		vi.stubGlobal('fetch', fetchMock);
+		mockLogin.mockReset();
+		mockResume.mockReset();
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
 	it('calls getByName with the did', async () => {
 		const { env } = makeEnv();
 		mockLogin.mockResolvedValue(fakeSession);
 		await getPasswordClient(env);
-		expect(env.DO_ATP_AUTH.getByName).toHaveBeenCalledWith('did:plc:service');
+		expect(env.DO_ATP_AUTH.getByName).toHaveBeenCalledWith(TEST_DID);
 	});
 
 	it('calls PasswordSession.login when no token is stored', async () => {
@@ -61,17 +86,40 @@ describe('getPasswordClient', () => {
 		expect(result).toBe(fakeSession);
 	});
 
-	it('passes login options to PasswordSession.login', async () => {
+	it('resolves the PDS URL from the DID document and passes it to login', async () => {
 		const { env } = makeEnv();
 		mockLogin.mockResolvedValue(fakeSession);
 		await getPasswordClient(env);
 		expect(mockLogin).toHaveBeenCalledWith(
 			expect.objectContaining({
-				service: 'https://bsky.social',
-				identifier: 'did:plc:service',
+				service: TEST_PDS_URL,
+				identifier: TEST_DID,
 				password: 'app-password-xyz',
 			}),
 		);
+	});
+
+	it('fetches the DID document from plc.directory by default', async () => {
+		const { env } = makeEnv();
+		mockLogin.mockResolvedValue(fakeSession);
+		await getPasswordClient(env);
+		expect(fetchMock).toHaveBeenCalledWith(`https://plc.directory/${TEST_DID}`);
+	});
+
+	it('uses ATPROTO_PLC_URL_OVERRIDE when fetching the DID document', async () => {
+		const { env } = makeEnv();
+		fetchMock.mockResolvedValue(makeDidDocResponse('http://localhost:3000'));
+		mockLogin.mockResolvedValue(fakeSession);
+		await getPasswordClient({ ...env, ATPROTO_PLC_URL_OVERRIDE: 'http://localhost:2582' });
+		expect(fetchMock).toHaveBeenCalledWith(`http://localhost:2582/${TEST_DID}`);
+	});
+
+	it('does not fetch the DID document when a stored session is resumed', async () => {
+		const stored = { accessJwt: 'stored-token' };
+		const { env } = makeEnv(makeDoStub(stored));
+		mockResume.mockResolvedValue(fakeSession);
+		await getPasswordClient(env);
+		expect(fetchMock).not.toHaveBeenCalled();
 	});
 
 	it('passes stored token to PasswordSession.resume', async () => {

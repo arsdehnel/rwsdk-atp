@@ -4,6 +4,7 @@
 
 | Module                                    | Description                                       |
 | ----------------------------------------- | ------------------------------------------------- |
+| [auth](/api/auth)                         | OAuth and password client factories and types     |
 | [browser-sessions](/api/browser-sessions) | Cookie-based session management with HMAC signing |
 | [errors](/api/errors)                     | Shared error types                                |
 | [logger](/api/logger)                     | Structured logging utilities                      |

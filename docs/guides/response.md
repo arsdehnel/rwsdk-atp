@@ -58,7 +58,7 @@ apiSuccessResponse<T>(data: T, status = 200): Response
 Returns `{ data }`:
 
 ```ts
-import { apiSuccessResponse } from 'rwsdk-atp/response';
+import { apiSuccessResponse } from '@arsdehnel/rwsdk-atp/response';
 
 return apiSuccessResponse(stance);        // 200
 return apiSuccessResponse(stance, 201);   // 201 Created
@@ -88,7 +88,7 @@ Pass `verboseErrors` based on your environment — `import.meta.env.DEV` is a ty
 
 ```ts
 // src/api/utils.ts
-import { apiErrorResponse as _apiErrorResponse } from 'rwsdk-atp/response';
+import { apiErrorResponse as _apiErrorResponse } from '@arsdehnel/rwsdk-atp/response';
 
 export function apiErrorResponse(err: unknown, fallbackMessage = 'An error occurred'): Response {
 	return _apiErrorResponse(err, fallbackMessage, import.meta.env.DEV);
@@ -106,7 +106,7 @@ actionSuccessResponse<T>(data: T, status = 200): ActionState<T>
 ```
 
 ```ts
-import { actionSuccessResponse } from 'rwsdk-atp/response';
+import { actionSuccessResponse } from '@arsdehnel/rwsdk-atp/response';
 
 return actionSuccessResponse(result);
 ```
@@ -120,7 +120,7 @@ actionValidationError<T>(errors: Record<string, string[]>, status = 400): Action
 For Zod or other field-level validation failures. The error map is passed through directly — validation errors are user-caused and always safe to display, so there is no `verboseErrors` parameter here.
 
 ```ts
-import { actionValidationError } from 'rwsdk-atp/response';
+import { actionValidationError } from '@arsdehnel/rwsdk-atp/response';
 
 const result = schema.safeParse(input);
 if (!result.success) {
@@ -137,7 +137,7 @@ actionErrorResponse<T>(err: unknown, fallbackMessage: string, verboseErrors: boo
 For unexpected errors caught in action handlers. Follows the same `verboseErrors` logic as `apiErrorResponse`, but puts the message(s) into `errors._form`. When verbose, the full cause chain is spread across `_form` as individual entries rather than joined into one string — the UI can then render them however it needs.
 
 ```ts
-import { actionErrorResponse } from 'rwsdk-atp/response';
+import { actionErrorResponse } from '@arsdehnel/rwsdk-atp/response';
 
 try {
 	// ...
@@ -155,7 +155,7 @@ toFormErrors<T>(state: ActionState<T>): { form?: string; fields: Record<string, 
 Converts an `ActionState` into the shape TanStack Form expects from an `onSubmitAsync` validator. Returns `undefined` on success (no errors to set), or an object with `form` for form-level errors and `fields` for field-level errors. Multiple messages per field are joined with `', '`.
 
 ```ts
-import { toFormErrors } from 'rwsdk-atp/response';
+import { toFormErrors } from '@arsdehnel/rwsdk-atp/response';
 
 const form = useAppForm({
 	validators: {

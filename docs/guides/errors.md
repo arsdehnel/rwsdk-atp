@@ -1,13 +1,13 @@
 # Error Classes
 
-`rwsdk-atp/errors` provides three error classes for different failure contexts: `AccessError` for authorization failures, the `RepositoryError` family for data-layer failures, and `StepError` for Cloudflare Workflow steps.
+`@arsdehnel/rwsdk-atp/errors` provides three error classes for different failure contexts: `AccessError` for authorization failures, the `RepositoryError` family for data-layer failures, and `StepError` for Cloudflare Workflow steps.
 
 ## `AccessError`
 
 Signals that the caller is not permitted to perform an operation. Carry the HTTP status code alongside the message so the API layer can respond correctly without needing to inspect the message string.
 
 ```ts
-import { AccessError } from 'rwsdk-atp/errors';
+import { AccessError } from '@arsdehnel/rwsdk-atp/errors';
 
 throw new AccessError(403, 'You do not have permission to delete this resource');
 throw new AccessError(401, 'Authentication required');
@@ -29,7 +29,7 @@ All repository error classes extend the abstract `RepositoryError` base, so you 
 A query returned no rows when at least one was expected. Default code is `404`.
 
 ```ts
-import { NoRecordFoundError } from 'rwsdk-atp/errors';
+import { NoRecordFoundError } from '@arsdehnel/rwsdk-atp/errors';
 
 throw new NoRecordFoundError('Stance');
 // message: "Stance not found"
@@ -52,7 +52,7 @@ throw new NoRecordFoundError('User', 500);
 A query returned more rows than expected. Always `500` — this indicates a data integrity problem.
 
 ```ts
-import { TooManyRecordsFoundError } from 'rwsdk-atp/errors';
+import { TooManyRecordsFoundError } from '@arsdehnel/rwsdk-atp/errors';
 
 throw new TooManyRecordsFoundError('Stance', rows.length, 1);
 // message: "Stance expected 1, got 3"
@@ -70,7 +70,7 @@ throw new TooManyRecordsFoundError('Stance', rows.length, 1);
 A value that should be a UUID failed validation — typically caught before hitting the database. Always `400`.
 
 ```ts
-import { InvalidUUIDError } from 'rwsdk-atp/errors';
+import { InvalidUUIDError } from '@arsdehnel/rwsdk-atp/errors';
 
 if (!validateUuid(id)) {
 	throw new InvalidUUIDError(id, 'ApiKey');
@@ -89,7 +89,7 @@ if (!validateUuid(id)) {
 A value that should be an AT Protocol DID failed validation. Always `400`.
 
 ```ts
-import { InvalidDIDError } from 'rwsdk-atp/errors';
+import { InvalidDIDError } from '@arsdehnel/rwsdk-atp/errors';
 
 if (!isValidDid(did)) {
 	throw new InvalidDIDError(did, 'User');
@@ -108,7 +108,7 @@ if (!isValidDid(did)) {
 An operation requires an entity to have an ATP record (URI + CID) but none exists. Always `500` — this indicates a data consistency problem: the entity should have been synced to the PDS before this operation was attempted.
 
 ```ts
-import { MissingAtpRecordError } from 'rwsdk-atp/errors';
+import { MissingAtpRecordError } from '@arsdehnel/rwsdk-atp/errors';
 
 if (!topic.atpUri || !topic.atpCid) {
 	throw new MissingAtpRecordError('topic', topic.id);
@@ -122,12 +122,70 @@ if (!topic.atpUri || !topic.atpCid) {
 | `entity` | `string` | Name of the entity type (e.g. `'topic'`)        |
 | `id`     | `string` | ID of the entity that is missing its ATP record |
 
+### `DatabaseOperationError`
+
+A D1 or Drizzle operation failed unexpectedly. Always `500`. Use this in D1/database repository functions to wrap low-level errors, so callers receive a typed `RepositoryError` rather than a raw driver error.
+
+```ts
+import { DatabaseOperationError } from '@arsdehnel/rwsdk-atp/errors';
+
+try {
+	const rows = await db.select().from(stances).where(eq(stances.id, id));
+	// ...
+} catch (err) {
+	throw new DatabaseOperationError('select stance by id', err);
+}
+// message: "Database operation failed: select stance by id"
+// code: 500
+// cause: the original driver error
+```
+
+| Argument      | Type      | Description                                    |
+| ------------- | --------- | ---------------------------------------------- |
+| `description` | `string`  | Short description of the operation that failed |
+| `cause`       | `unknown` | Underlying error, attached as `err.cause`      |
+
+### `AtpOperationError`
+
+An AT Protocol PDS operation failed. Always `500`. Use this in PDS repository functions to wrap errors from the ATP client, so callers get typed errors with XRPC metadata they can act on.
+
+The constructor duck-types the `cause` for XRPC error metadata — if the cause has a numeric `status` >= 100 it is captured as `atpStatus`, if it has a string `error` it is captured as `atpError`, and `retryable` is derived from `shouldRetry()` if present.
+
+```ts
+import { AtpOperationError } from '@arsdehnel/rwsdk-atp/errors';
+
+try {
+	const result = await pdsClient.createRecord(record);
+	// ...
+} catch (err) {
+	throw new AtpOperationError('createRecord stance', err);
+}
+// message: "ATP operation failed: createRecord stance"
+// code: 500
+// atpStatus: 401 (if the cause had status: 401)
+// atpError: "AuthenticationRequired" (if the cause had error: "AuthenticationRequired")
+// retryable: false (if the cause had shouldRetry: () => false)
+```
+
+| Argument      | Type      | Description                                          |
+| ------------- | --------- | ---------------------------------------------------- |
+| `description` | `string`  | Short description of the operation that failed       |
+| `cause`       | `unknown` | Underlying error; XRPC metadata is extracted from it |
+
+Additional properties on the thrown error:
+
+| Property    | Type                    | Description                                                       |
+| ----------- | ----------------------- | ----------------------------------------------------------------- |
+| `atpStatus` | `number` \| `undefined` | HTTP status from the XRPC error, if available (>= 100 only)       |
+| `atpError`  | `string` \| `undefined` | XRPC error code string from the cause, if available               |
+| `retryable` | `boolean`               | Whether the operation can be retried (from `cause.shouldRetry()`) |
+
 ## `StepError`
 
 For Cloudflare Workflow steps. Separates the message you show users from the detail you log internally, and signals whether the step should be retried.
 
 ```ts
-import { StepError } from 'rwsdk-atp/errors';
+import { StepError } from '@arsdehnel/rwsdk-atp/errors';
 
 throw new StepError(
 	503,
@@ -152,7 +210,7 @@ throw new StepError(
 If you need to catch errors manually, all three classes carry a `code` so a single catch block can determine the right HTTP status without inspecting the message:
 
 ```ts
-import { AccessError, RepositoryError } from 'rwsdk-atp/errors';
+import { AccessError, RepositoryError } from '@arsdehnel/rwsdk-atp/errors';
 
 try {
 	const stance = await getStanceById(id, logger);
